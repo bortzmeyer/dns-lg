@@ -1,0 +1,34 @@
+.hostname {
+    font-family:     "Courier New",
+                     Courier,
+                     monospace;
+  font-size : 120%;
+}
+
+.domainname {
+    font-family:     "Courier New",
+                     Courier,
+                     monospace;
+  font-size : 120%;
+}
+
+.address {
+    font-family:     "Courier New",
+                     Courier,
+                     monospace;
+  font-size : 110%;
+}
+
+.naptr_regexp {
+    font-family:     "Courier New",
+                     Courier,
+                     monospace;
+  font-size : 110%;
+}
+
+.email {
+    font-family:     "Courier New",
+                     Courier,
+                     monospace;
+  font-size : 140%;
+}

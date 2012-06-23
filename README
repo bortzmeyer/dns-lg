@@ -1,0 +1,191 @@
+General
+*******
+
+This software is a "DNS looking glass". The DNS (Domain Name System)
+is the distributed database used to retrieve data (typically IP
+addresses) from domain
+names. <http://en.wikipedia.org/wiki/Domain_Name_System>
+
+A "looking glass", among Internet engineers, typically refer to a
+server on one network which serves information seen from this network
+(two points of the Internet may see different things, that's why
+looking glasses are important). Their main use, today, is to see BGP
+<http://en.wikipedia.org/wiki/Border_Gateway_Protocol> routes from
+another point of view
+<http://en.wikipedia.org/wiki/Looking_Glass_servers>. But it is time
+to extend them to the DNS.
+
+The "DNS looking glass" allows you to get DNS data from another
+server. This is useful to check site-dependent behavior. Among the
+many reasons why the DNS data can be different in various places:
+* cache poisoning, for instance by a Kaminsky attack 
+  <http://en.wikipedia.org/wiki/DNS_cache_poisoning>,
+* DNSSEC validation enabled at some places but not others,
+* network problems making name servers unreachable from some places,
+* caching effects (data in the cache at some places but not others),
+* censorship making some names such as thepiratebay.org or
+  wikileaks.org unavailable in some sites.
+
+License
+*******
+
+A simple, permissive, free software license, known as 2-clause BSD
+license (or simplified BSD license; it is equivalent to the ISC
+license). See LICENSE for the full text.
+
+Usage
+*****
+
+We assume that someone installed the software. If you install it
+yourself, see the next section.
+
+The major usage of this program is through REST requests
+<http://en.wikipedia.org/wiki/Representational_state_transfer> (if you
+do not know REST, do not worry; basically, it means we use ordinary
+HTTP requests). If the program is installed at
+<http://dns.example.net/>, the URL for the requests will be
+<http://dns.example.net/$DOMAIN[/$TYPE]> where DOMAIN is the domain
+name and TYPE a DNS record type (such as AAAA or MX).
+
+More formally, following the language of URI Templates (RFC 6570), the
+URLs of this service are
+<http://dns.example.net/{+domain}/{querytype}{?format,server,buffersize,dodnssec,tcp,reverse}>
+
+There is a non-standard pseudo-querytype ADDR to request both A and
+AAAA, specially for the links in the HTML output.
+
+The default output format is HTML so you can use this program from an
+ordinary Web browser. You can add the option format=FORMAT where
+FORMAT is XML, HTML, TEXT, ZONE or JSON (see next section). So, for
+instance, to get the IPv6 address of www.example.com in XML, it will
+be <http://dns.example.net/www.example.com/AAAA?format=XML>
+
+You can add an option to select the name server to query (the default
+one is choosen by the server, typically the default resolver(s) of the
+machine). server=IP-ADDRESS (names are *not* supported)
+
+To activate DNSSEC in the responses (to send the DO bit), use option
+dodnssec=1 in the URL. This option will allow you (if the resolver
+supports it) to see the AD (Authentic Data) flag.
+
+To use TCP (instead of UDP) for the request, use option tcp=1 in the
+URL.
+
+By default, the server queries the name servers with EDNS0 and a
+buffer size of 4096 bytes. To change that, use the option buffersize
+with the value you want. Setting it to 0 will disable EDNS.
+
+For finding a domain name from an IP address, you can do requests with
+the arpa domain name, for instance
+<http://dns.example.net/1.2.0.192.in-addr.arpa/PTR> but you can also
+use the option reverse to ask for the address to be turned into an
+arpa domain name, for instance
+<http://dns.example.net/192.0.2.1?reverse=1>.
+
+There is a rate-limiter so, if you receive HTTP status code 429, it
+means you have been too aggressive.
+
+Format-specific things
+**********************
+
+The XML option follows partially the format of Internet-Draft
+draft-mohan-dns-query-xml for the outer elements (plus some
+extensions) and of draft-daley-dns-schema for the resource data. Note
+that the query format does *not* follow the first draft's syntax.
+
+The JSON option's format is documented in the file JSON.txt.
+
+The HTML option's format is not documented. To style the output, a
+sample CSS file is included in dnslg.css.
+
+The Text option's format is not documented. It is intended for human
+reading. If you need a structured format, use XML or JSON. If you
+prefer text-based formats, for instance for processing with common
+Unix CLI tools (awk, grep, etc), the best one is probably the Zone
+format.
+
+The Zone option's format follows section 5 of RFC 1035, with tabs as
+separators.
+
+Requirments
+***********
+
+Requires Python, then SimpleTAL, dnspython and netaddr
+Debian/Ubuntu: packages "python-netaddr python-dnspython python-simpletal"
+
+Installation
+************
+
+python setup.py build
+$SUDO-OR-SIMILAR python setup.py install
+
+Then , you have to configure a HTTP server to run this WSGI
+script. Some configuration data can be sent by environment
+variables. For instance, if you use Google Webmasters and have the
+code (the cookie) "google1234baddcaf5678", *and* you want the program
+to serve the file itself (it is not mandatory), then you need to
+define the environment variable DNSLG_GOOGLE_WEBMASTERS_CODE to this
+code.
+
+For Apache, this is typically something like:
+
+<VirtualHost *:80>
+    ServerName dns.example.net
+    DocumentRoot "/var/www/dns.example.net/root"
+
+    <Directory "/var/www/dns.example.net/scripts">
+        Options -Indexes FollowSymLinks +ExecCGI
+        SetHandler wsgi-script
+        Order allow,deny
+        Allow from all
+    </Directory>
+    WSGIScriptAlias / /var/www/dns.example.net/scripts/dnslg.py
+    WSGIDaemonProcess dns.example.net processes=5 threads=10 display-name=%{GROUP}
+    WSGIProcessGroup dns.example.net
+</VirtualHost>
+
+where dnslg.py is copied and adapted from sample-wsgi-dnslg.py or
+sample-wsgi-dnslg-with-config-file.py.
+
+The starters with a configuration file use the INI format. Use
+sample-config-file.ini as an example.
+
+There are many other possibilities, either with Apache or with another
+HTTP server with WSGI support. Browse the Web!
+
+TODO: document the special files such as robots.txt (see the comments
+at the end of DNSLG/__init__.py)
+
+TODO CRIT: official source at github
+
+TODO CRIT: bug reports at github
+
+Tests
+*****
+
+To try it locally;
+% python test-server.py
+Then, from another window:
+% curl http://localhost:8080/example.org/A
+
+Other DNS looking glasses
+*************************
+
+http://live.icmynet.com/icmynet-dns/ No API, Web only
+
+http://www.zonecut.net/dns/index.cgi No API, Web only
+
+http://www.whatsmydns.net/ REST URLs but no API
+
+Author
+******
+
+Written by Stephane Bortzmeyer <bortzmeyer+dnslg@nic.fr>. 
+
+Favicon <http://www.favicon.cc/?action=icon&file_id=513990>, 
+by Philippe Regnauld <http://www.favicon.cc/?action=icon_list&user_id=155740>
+
+Implementation details
+**********************
+
+See IMPLEMENTATION

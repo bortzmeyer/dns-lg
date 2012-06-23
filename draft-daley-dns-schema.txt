@@ -1,0 +1,2479 @@
+
+
+
+DNS Extensions Working Group                                    J. Daley
+Internet-Draft                                                 S. Morris
+Intended status: Informational                                Nominet UK
+Expires: July 28, 2008                                  January 25, 2008
+
+
+                       Schema definition for DNS
+                       draft-daley-dns-schema-00
+
+Status of this Memo
+
+   By submitting this Internet-Draft, each author represents that any
+   applicable patent or other IPR claims of which he or she is aware
+   have been or will be disclosed, and any of which he or she becomes
+   aware will be disclosed, in accordance with Section 6 of BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as Internet-
+   Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on July 28, 2008.
+
+Copyright Notice
+
+   Copyright (C) The IETF Trust (2008).
+
+Abstract
+
+   This memo describes a syntax for encoding DNS Resource Records in
+   XML, and a schema to define that syntax written in XML Schema.  It
+   can be used to represent all DNS RDATA.  This can be used by diverse
+   applications as a common format.
+
+   DNS Resource Records are represented as XML elements with the name of
+   the element taken from the mnemonic used to represent the DNS
+   Resource Record in presentation format.  The RDATA is represented as
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 1]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   XML attributes.  The attribute names are taken from the RDATA field
+   names specified in the normative RFC.
+
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.1.  Terminology  . . . . . . . . . . . . . . . . . . . . . . .  4
+   2.  Requirements . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     2.1.  Requirements for the XML syntax for DNS RRs  . . . . . . .  4
+     2.2.  Requirements for the XML Schema to describe the XML
+           syntax for DNS RRs . . . . . . . . . . . . . . . . . . . .  5
+     2.3.  Supported DNS RRs  . . . . . . . . . . . . . . . . . . . .  5
+     2.4.  Out of scope issues  . . . . . . . . . . . . . . . . . . .  6
+   3.  The XML syntax for DNS RRs . . . . . . . . . . . . . . . . . .  7
+     3.1.  Design considerations  . . . . . . . . . . . . . . . . . .  7
+       3.1.1.  Unique element for each RR . . . . . . . . . . . . . .  7
+       3.1.2.  RDATA representation . . . . . . . . . . . . . . . . .  7
+       3.1.3.  RRSet element  . . . . . . . . . . . . . . . . . . . .  7
+       3.1.4.  Elements that represent RRs that can be used
+               inside an RRSet and standalone . . . . . . . . . . . .  8
+       3.1.5.  Element for holding raw RR data  . . . . . . . . . . .  8
+   4.  The schema to define the XML syntax  . . . . . . . . . . . . .  8
+     4.1.  Design considerations  . . . . . . . . . . . . . . . . . .  8
+       4.1.1.  Use of XML Schema  . . . . . . . . . . . . . . . . . .  8
+       4.1.2.  Use of XML Namespaces  . . . . . . . . . . . . . . . .  8
+       4.1.3.  Base RR element and base attributes  . . . . . . . . .  9
+       4.1.4.  RDATA attribute types  . . . . . . . . . . . . . . . .  9
+       4.1.5.  RDATA attribute values . . . . . . . . . . . . . . . . 10
+       4.1.6.  Required or optional attributes  . . . . . . . . . . . 10
+       4.1.7.  Global attribute declarations  . . . . . . . . . . . . 10
+       4.1.8.  Top level container element  . . . . . . . . . . . . . 10
+       4.1.9.  Specific attribute considerations  . . . . . . . . . . 11
+     4.2.  Limitations of the schema  . . . . . . . . . . . . . . . . 14
+       4.2.1.  Spurious attributes  . . . . . . . . . . . . . . . . . 14
+       4.2.2.  No restrictions on what RRs can be appended to an
+               RRset  . . . . . . . . . . . . . . . . . . . . . . . . 14
+       4.2.3.  Inconsistent or imprecise RFCs . . . . . . . . . . . . 15
+       4.2.4.  Additional presentation formats  . . . . . . . . . . . 15
+       4.2.5.  Different wire formats for RDATA with semantic
+               equivalence  . . . . . . . . . . . . . . . . . . . . . 15
+     4.3.  Extending the schema . . . . . . . . . . . . . . . . . . . 15
+       4.3.1.  The extension mechanism  . . . . . . . . . . . . . . . 15
+       4.3.2.  Creating an extension  . . . . . . . . . . . . . . . . 17
+       4.3.3.  Using an extension . . . . . . . . . . . . . . . . . . 17
+     4.4.  Implementing new versions of the schema  . . . . . . . . . 18
+       4.4.1.  Use of version specific namespaces . . . . . . . . . . 18
+       4.4.2.  Possible type changes in a new version . . . . . . . . 18
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 2]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   5.  Semantic Web considerations  . . . . . . . . . . . . . . . . . 19
+   6.  Security Considerations  . . . . . . . . . . . . . . . . . . . 19
+   7.  IANA Considerations  . . . . . . . . . . . . . . . . . . . . . 19
+   8.  Full Schema  . . . . . . . . . . . . . . . . . . . . . . . . . 20
+   9.  Acknowledgments  . . . . . . . . . . . . . . . . . . . . . . . 40
+   10. References . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+     10.1. Normative References . . . . . . . . . . . . . . . . . . . 40
+     10.2. Informative References . . . . . . . . . . . . . . . . . . 40
+   Authors' Addresses . . . . . . . . . . . . . . . . . . . . . . . . 43
+   Intellectual Property and Copyright Statements . . . . . . . . . . 44
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 3]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+1.  Introduction
+
+   Historically, DNS Resource Records (RRs) have a presentation format
+   and wire format.  The presentation format is typically used to
+   conveniently store DNS RRs in Human Readable Form.  The wire format
+   is typically used in transport and communication between DNS protocol
+   elements.This memo describes a syntax for encoding DNS RRs in XML
+   [W3C.REC-XML] and a schema to define that syntax, written in XML
+   Schema [W3C.REC-XMLSchema-1].  This syntax and corresponding schema
+   definition are called dns-schema.  The use case for dns-schema is to
+   have a set of rules to which a DNS RR must conform to, in order to
+   limit common mistakes in DNS Presentation Format, and to have a
+   common encoding between applications for DNS RRs.
+
+   TODO an example of usage.
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+1.1.  Terminology
+
+   'element that represents an RR'  An XML element, defined in dns-
+      schema that represents an RR.
+
+
+2.  Requirements
+
+2.1.  Requirements for the XML syntax for DNS RRs
+
+   The first requirement is to develop an XML syntax for DNS RRs, with
+   the following characteristics:
+
+   1.  A succinct syntax for the XML wrapper around the DNS data such
+       that a human reading or writing it can do so as quickly and
+       easily as possible.
+
+   2.  This syntax should use as closely as possible the presentation
+       format for RDATA fields given in various RFCs, even if that
+       reduces overall readability.
+
+   3.  This syntax should be independent of any name server
+       implementation.
+
+   4.  This syntax should use a single element for each RR.
+
+   5.  This syntax should allow the encoding of an RR of unknown type as
+       described in [RFC3597].
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 4]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   6.  This syntax should allow the encoding of any RDATA that might
+       appear in a datagram with the correct over structure for a DNS
+       datagram, even if the data contained in that datagram did not
+       conform to the DNS specifications.  This is necessary to allow
+       dns-schema to be used with 'broken' DNS data.
+
+2.2.  Requirements for the XML Schema to describe the XML syntax for DNS
+      RRs
+
+   The second requirement, leading from the first, is to develop a
+   schema definition that describes the XML syntax with the following
+   characteristics:
+
+   1.  The schema should allow conforming XML to be validated before
+       this XML was sent to an application, or for a server to validate
+       it upon receipt before any further processing.
+
+
+
+   2.  This schema must not impose any restrictions on the future
+       definition of a new RR or a change to an existing RR.
+
+   3.  This schema must allow for any new RR to be described as an
+       extension of it and used as easily as any RR described in it.
+
+   4.  When a new version of this schema is brought out, it must be
+       possible for it to include new RRs or changes to existing RRs
+       that have been described in new RFCs, without preventing the
+       continuing use of any other extensions.
+
+   5.  This schema should make a semantic link between RDATA fields that
+       represent semantically equivalent data.
+
+2.3.  Supported DNS RRs
+
+   The following RFCs and Resource Records are supported in dns-schema:
+
+   o  From [RFC1035], A, CNAME, HINFO, MB, MG, MINFO, MR, MX, NS, NULL,
+      PTR, SOA, TXT and WKS.
+
+   o  From [RFC1183], AFSDB, ISDN, RP, RT and X25.
+
+   o  From [RFC1706], NSAP.
+
+   o  From [RFC1712], GPOS.
+
+   o  From [RFC1876], LOC.
+
+   o  From [RFC2163], PX.
+
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 5]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   o  From [RFC2230], KX.
+
+   o  From [RFC2538], CERT.
+
+   o  From [RFC2672], DNAME.
+
+   o  From [RFC2782], SRV.
+
+   o  From [RFC2845], TSIG.
+
+   o  From [RFC2874], A6.
+
+   o  From [RFC2930], TKEY.
+
+   o  From [RFC3403], NAPTR.
+
+   o  From [RFC3596], AAAA.
+
+   o  From [RFC4025], IPSECKEY.
+
+   o  From [RFC4034], DNSKEY, DS, NSEC and RRSIG.
+
+   o  From [RFC4255], SSHFP.
+
+   o  From [RFC4408], SPF.
+
+   o  From [RFC4431], DLV.
+
+   o  From [RFC4701], DHCID.
+
+   Obsolete DNS resource records are not supported.  Neither are the NB
+   and NBSTAT RRs defined in [RFC1002].
+
+
+2.4.  Out of scope issues
+
+   There are some issues that are out of scope for this memo:
+
+   o  No use is made of Master File Format [RFC1035], section 5.1.
+
+   o  No use is made of the DNS header section of a DNS datagram.
+
+   o  This memo speculates on possible uses of dns-schema, but does not
+      require any such use.
+
+
+
+
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 6]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+3.  The XML syntax for DNS RRs
+
+   The syntax by which the DNS RRs is represented has been chosen
+   carefully to meet the given requirements of being succinct and easy
+   to read and write for a human.  This is an example of a resource
+   record described in this syntax:
+
+   <A owner="example" class="IN" ttl="86400" address="192.0.2.1"/>
+
+   and this is an example of an RRSet:
+
+   <RRSet owner="example" class="IN" type="A" ttl="86400" >
+     <A address="192.0.2.1" />
+     <A address="192.0.2.2" />
+   </RRSet>
+
+3.1.  Design considerations
+
+   The design considerations behind this syntax are:
+
+3.1.1.  Unique element for each RR
+
+   Each DNS RR has a corresponding element.  That ensures that any
+   schema can constrain the allowable attributes on a per RR basis.  The
+   alternative would be to create a generic <RR> element, but in that
+   case a schema could not constrain the allowable attributes and would
+   place more emphasis on the application to validate this.
+
+3.1.2.  RDATA representation
+
+   All RDATA can be correctly represented in attributes, rather than
+   elements.  This significantly reduces the verbosity of the XML.
+
+   For each element that represents an RR, the attributes specified
+   correspond to those specified in the normative RFC that defines the
+   RDATA for that RR.  The names of the attributes are those given the
+   corresponding RR.  For example, the MX element has the specific
+   attributes of 'preference' and 'exchange' as specified in [RFC1035].
+
+3.1.3.  RRSet element
+
+   An element that represents an RRSet is included, using the definition
+   from [RFC2136] that it is a set of RRs that share the same owner,
+   class and type.  In addition a ttl attribute is specified because
+   [RFC2181] requires all the RRs in an RRSet to share the same ttl.
+
+   If an RR is ever defined with the mnemonic of 'RRSET' then this would
+   present future versions of dns-schema with a naming conflict.
+
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 7]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+3.1.4.  Elements that represent RRs that can be used inside an RRSet and
+        standalone
+
+   The elements that represent RRs can be used standalone or inside an
+   RRSet.  When used inside an RRSet the owner and class attributes are
+   superfluous and the ttl attribute may only be used subject to the
+   restrictions of [RFC2181].
+
+3.1.5.  Element for holding raw RR data
+
+   An element called binaryRR is included that can hold an RR of any
+   type.  This has an attribute 'rtype' that holds the DNS type code, an
+   attribute 'rdlength' that holds the length of the RDATA and another
+   attribute 'rdata' that holds the raw rdata.  An application MUST
+   encode the rdata in hexadecimal data encoding as specified as part of
+   the the presentation format of an RR of unknown type in [RFC3597].
+
+   This element can also be used to contain 'broken' DNS data,
+   satisfying this requirement.
+
+
+4.  The schema to define the XML syntax
+
+4.1.  Design considerations
+
+   The schema appears in full in Section 8.  The design considerations
+   behind this schema are:
+
+4.1.1.  Use of XML Schema
+
+   This schema is written using XML Schemas [W3C.REC-XMLSchema-1] and
+   [W3C.REC-XMLSchema-2] because this is a W3C standard and provides the
+   necessary level of flexibility to correctly specify the preferred
+   syntax.  Other schema languages could have been used just as well.
+
+4.1.2.  Use of XML Namespaces
+
+   XML Namespaces [W3C.REC-xml-names] need to be used in the schema to
+   reference the defined types.  Any document validated against dns-
+   schema must contain a namespace reference in order for it to validate
+   properly.  For example
+
+ <dnsSchema xmlns="urn:ietf:params:xml:ns:dns"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="urn:ietf:params:xml:ns:dns dns-1.0.xsd">
+
+   In that example the default namespace is set to refer to elements and
+   attributes from dns-schema.  A third party extension could be
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 8]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   included in the namespace declarations, with a specified prefix, and
+   so all use of the extension would be clearly identified by use of
+   that prefix.  This is described more fully in Section 4.3
+
+4.1.3.  Base RR element and base attributes
+
+   An abstract 'RR' element is declared with a defined base type that
+   contains the base attributes of 'class', 'ttl' and 'owner'.  All
+   elements that represent RRs are derived from this base element and
+   have a type derived from the base type.  This ensures that all
+   elements that represent RRs have those attributes.  This is achieved
+   using the XML Schema [W3C.REC-XMLSchema-1] feature of
+   substitutionGroup
+
+   This same mechanism is used by any new RRs that are created in
+   extensions, which ensures they are treated equally to built-in RRs
+   rather than needing to appear in a separate extension element.  This
+   is covered further in Section 4.3
+
+   It should be noted that, as this is an abstract element, it cannot be
+   used in a conforming XML document.
+
+4.1.4.  RDATA attribute types
+
+   The type of an attribute is chosen to represent the presentation
+   format for the RDATA field specified in the relevant RFC.  For
+   example a field specified as 32 bit unsigned integer is represented
+   using the XML Schema [W3C.REC-XMLSchema-2] type of 'unsignedInt'.
+
+   Most attributes are typed by a simple type built in to XML Schema
+   [W3C.REC-XMLSchema-2].  Some attributes are typed indirectly by the
+   use of a new simple type defined in dns-schema.  These are in most
+   cases just the simplest restriction of a base type.  This is done for
+   a number of reasons:
+
+   o  Where there are multiple presentation formats for a single RDATA
+      field and so the defined type is a union of two built-in types.
+
+   o  Where the type chosen allows for a greater range of values than is
+      allowed in the RDATA field wire format.  Using a defined type
+      allows for later development where the range of values is further
+      constrained to match those of the wire format.  Such restriction
+      on values is not implemented in this version of dnsSchema as
+      explained in Section 4.1.5
+
+   o  Where there are fields that share the same semantic use (for
+      example an IP address or domain name).  This use of types is to
+      prepare for later semantic inferences as explained in Section 5
+
+
+
+Daley & Morris            Expires July 28, 2008                 [Page 9]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+4.1.5.  RDATA attribute values
+
+   The values of attributes that represent RDATA are not constrained to
+   match the allowable values in the relevant RFC.  This is done for a
+   number of reasons:
+
+   o  To reduce the complexity and processing requirements of the schema
+      validation.
+
+   o  To aid extensibility.  It should be noted that the only way to
+      restrict attributes to a list of known values is to use a feature
+      of XML Schema [W3C.REC-XMLSchema-1], attribute value enumerations,
+      that cannot be extended.
+
+   It is therefore down to the application to check the values of
+   attributes that represent RDATA to ensure they are meaningful.
+
+4.1.6.  Required or optional attributes
+
+   Extensive use is made of the XML Schema [W3C.REC-XMLSchema-1]
+   attribute 'use="required"' by which the use of an attribute in
+   conforming documents is mandated.  This is used when the normative
+   RFC for that RR states that an RDATA MUST exist.
+
+4.1.7.  Global attribute declarations
+
+   Global attribute declarations are not used, instead a similar effect
+   is attained by the use of defined types.  The reason for not using
+   global attribute declarations is to simplify an instance document,
+   which would otherwise require namespace declarations for such
+   attributes, complicating those documents.
+
+4.1.8.  Top level container element
+
+   There is an element in the schema called 'dnsSchema' that does not
+   represent any DNS data.  It is provided as an optional top-level
+   container element, which can be used in a document as the opening
+   element and contain an arbitrary list of 'RRSet' elements and
+   elements representing RRs.
+
+   However it does not have to be used, as both the 'RRSet' element and
+   the elements representing RRs are declared as top level elements and
+   so can be used directly in a valid document.
+
+   It would be sensible for the 'dnsSchema' element to be used in
+   document that only references this schema (a standalone document), as
+   a container for a set of elements and not to be used where dnsSchema
+   elements would appear embedded in elements defined in another schema.
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 10]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   For example, a standalone document might look like this
+
+<dnsSchema xmlns="urn:ietf:params:xml:ns:dns"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="urn:ietf:params:xml:ns:dns dns-1.0.xsd" >
+
+  <A owner="example1" class="IN" ttl="86400" address="192.0.2.2" />
+  <A owner="example2" class="IN" ttl="86400" address="192.0.2.1" />
+
+</dnsSchema>
+
+   Whereas a fragment of a document where dnsSchema is embedded, might
+   look like this
+
+       :
+   <someApp>
+     <someCommand>
+       <dns:A owner="example2" class= IN" ttl="86400"
+              address="192.0.2.1" />
+     </someCommand>
+   </someApp>
+       :
+
+4.1.9.  Specific attribute considerations
+
+   There are some special cases that require further discussion, these
+   are described below:
+
+4.1.9.1.  Anonymous RDATA
+
+   The SPF, TXT and DHCID RRs have a single anonymous RDATA field just
+   referred to as the RDATA in the normative RFC.  For each of these the
+   attribute that represents the RDATA is called 'rdata'.
+
+4.1.9.2.  IP address in RDATA
+
+   An IPv4 address is defined to be of type 'ipaddressType', which in
+   turn is defined to be a 'string' with the maximum length restricted
+   and is intended to hold the address in dotted-quad notation.  A later
+   development may be to use a regular expression to ensure that the
+   contents of the string are indeed a valid IP address, but that is not
+   tackled in this memo.
+
+   IP v6 addresses are similarly defined.  The maximum length is set to
+   allow for embedded dotted quad in the IPv6 address.
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 11]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+4.1.9.3.  Domain names in RDATA
+
+   Attributes for RDATA fields that are used for domain names are all of
+   the type 'domainType'.  This is defined to be a 'string' with the
+   maximum length restricted.  No use is made of a regular expression to
+   check that the contents of an attribute are a correctly formatted
+   domain name.
+
+
+4.1.9.4.  The rdata attribute of the binaryRR element
+
+   [RFC3597] specifies a presentation format for an RR of an unknown
+   type.  In dns-schema 'rdata' is of the type hexBinary.
+
+4.1.9.5.  XML in RDATA
+
+   Any data in attributes that represent an RDATA field that can contain
+   XML MUST be escaped using the rules given in [W3C.REC-XML]
+
+   Because escaping is a standard part of XML, no specific type is
+   defined to use for those fields where escaping may be required.
+
+4.1.9.6.  Unparsed data in RDATA
+
+   A number of RDATA fields are defined in RFCs as containing any text
+   data.  Again any data in the attributes that represent these RDATA
+   fields MUST be escaped following the rules given in [W3C.REC-XML]
+
+4.1.9.7.  Variable length binary data in RDATA
+
+   There are a number of examples where RDATA contains a binary field
+   such as set of flags or a bit map field.  For example WKS has a
+   variable length bit map field, with no defined presentation format.
+
+   These fields are represented either by the XML Schema
+   [W3C.REC-XMLSchema-2] types of 'hexBinary' or 'base64Binary'
+   depending on context.  XML Schema [W3C.REC-XMLSchema-2] in turn
+   references [RFC2045] for the definition of base64.
+
+4.1.9.8.  Preferences in RDATA
+
+   A number of RRs have a preference RDATA field, namely KX, MX, PX, RT,
+   NAPTR.  The attributes that represent the preference field for these
+   RRs are all defined to be of the type 'preferenceType' on the
+   potentially contentious grounds that they are semantically
+   equivalent.
+
+   Additionally the IPSECKEY RR has a precedence RDATA field, which is
+   defined as being equivalent to the preference RDATA field of the MX
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 12]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   RR.  The attribute representing this field is therefore also defined
+   as being of type 'preferenceType'.
+
+4.1.9.9.  Seconds (units of time) in RDATA
+
+   Many RDATA fields are defined as unsigned 32 bit integers that record
+   a number of seconds.  This is used in three separate ways:
+
+   o  Fields such as the 'refresh' field of the SOA RR, contain seconds
+      as a relative value.
+
+   o  Fields such as the 'signature expiration' field of the RRSIG RR,
+      contain the number of seconds since the epoch.
+
+   o  Fields such as the 'ttl' field of all RRs, contain a relative
+      number of seconds but with specific semantic usage of Time To
+      Live.
+
+   These three separate ways are represented by attributes of three
+   different defined types:
+
+   o  Attributes that represent RDATA fields of relative seconds are
+      defined to be of type 'secondsType'.  This is an unsigned int.
+
+   o  Attributes that represent RDATA fields of seconds since the epoch
+      are defined to be of type 'secondsSinceEpochType'.  Different RRs
+      define different presentation formats for these fields, some using
+      straight integers such as the 'inception' field of the TKEY RR,
+      but the 'signature inception' field of the RRSIG RR additionally
+      defines the 14 character 'YYYYMMDDHHmmSS' string format.
+      Accordingly 'secondsSinceEpochType' is a union of two simple
+      types, one that allows the integer representation and one that
+      allows a string representation of 14 characters, sufficient for
+      the 'YYYYMMDDHHmmSS' representation.
+
+   o  Attributes that represent TTL are defined to be of type 'ttlType',
+      which is derived from 'secondsType'.  This enables the semantic
+      equivalence of fields that represent TTL.
+
+   Unfortunately there are anomalies with seconds (units of time) in
+   RDATA.  These are explained further in section Section 4.2
+
+
+4.1.9.10.  [RFC4034] algorithms in RDATA
+
+   Three RRs defined in [RFC4034], namely DNSKEY, RRSIG and DS all have
+   an algorithm field in their RDATA.  This is specified as having two
+   presentation formats, an unsigned integer and a string mnemonic.  The
+   attributes that represent these fields have the type 'algorithmType'.
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 13]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   This is defined as a union of two simple types, one that allows
+   integer representation and one that allows a string representation.
+   The string type is not restricted to the mnemonic values given in
+   [RFC4034].
+
+4.1.9.11.  DNSKEY flags and protocol in RDATA
+
+   The flags and protocol RDATA fields of DNSKEY (defined in [RFC4034])
+   are represented in integer format and so the attributes that
+   represent these fields are only defined to be the appropriate integer
+   type.
+
+4.2.  Limitations of the schema
+
+4.2.1.  Spurious attributes
+
+   Each element that represents an RR has the base attributes of
+   'class', 'owner' and 'ttl', which also appear as attributes of an
+   RRSet.  Because of the syntax requirement Section 2.1 to have a
+   single element for each RR, it is possible for the elements within an
+   RRSet to have 'class', 'owner' and 'ttl' attributes that contradict
+   those of the RRSet.  For example
+
+   <RRSet owner="example" class="IN" type="A" ttl="86400" >
+     <A class="CH" address="192.0.2.1" />
+     <A owner="different" address="192.0.2.2" />
+     <A ttl="400" address="192.0.2.3" />
+   </RRSet>
+
+   To correct this anomaly would require such significant alterations to
+   the schema that a number of important characteristics, including
+   simplicity and ease of use, would be lost.
+
+   As it is the intent of this memo to mirror the presentation format of
+   DNS RRs in XML, not to change them, then applications that are
+   presented with such inconsistent data SHOULD ignore any 'class',
+   'ttl' and 'owner' attributes given in the elements within an RRSet,
+   whether or not they contradict those of the RRSet.
+
+   Note that the use of different ttl values for each RR within an RRSet
+   was deprecated in section 5.2 of [RFC2181].
+
+4.2.2.  No restrictions on what RRs can be appended to an RRset
+
+   [RFC2136] lists a number of RRs that cannot be appended to an RRset.
+   This restriction is not enforced in this schema.
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 14]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+4.2.3.  Inconsistent or imprecise RFCs
+
+   Some RFCs are not clear on whether a specified RDATA field is a
+   signed or unsigned integer.  This syntax has made a reasoned choice.
+   For example the 'refresh' field within the SOA RR is not explicitly
+   defined as signed or unsigned, but it would not make sense if a
+   signed integer was used here.
+
+4.2.4.  Additional presentation formats
+
+   In order to preserve semantic equivalence some attributes that
+   represent RDATA are of the same type and so allow the same
+   presentation formats when the normative RFCs do not specify those
+   presentation formats for that RDATA.
+
+   Examples of this include the 'inception' field of the TKEY RR.  The
+   attribute that represents this is of the type
+   'secondsSinceEpochType', which allows the string representation of
+   'YYYYMMDDHHmmSS' even though this is not a defined presentation
+   format for this field.
+
+4.2.5.  Different wire formats for RDATA with semantic equivalence
+
+   There are some RDATA fields in different RRs that have the semantic
+   equivalence but are represented in different wire formats, making it
+   impossible to use common attribute types.
+
+   The one example of this is the 'timesigned' field of the TSIG RR,
+   which is defined as representing seconds since the epoch but has the
+   wire format of a 48 bit unsigned integer, when all other semantically
+   equivalent fields use a 32 bit unsigned integer.  In this instance
+   this field uses its own unique type.
+
+4.3.  Extending the schema
+
+4.3.1.  The extension mechanism
+
+   All elements that represent RRs are specified using the same
+   mechanism that is made available for the development of third-party
+   extensions.
+
+   The schema defines an abstract element called 'RR', which is of an
+   abstract type 'RRType' that defines the three base attributes of
+   'class', 'ttl' and 'owner'.  This is done in this code:
+
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 15]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   <element name="RR" type="dns:RRType" />
+
+   <complexType name="RRType" abstract="true">
+     <attribute name="class" type="dns:classType" />
+     <attribute name="ttl" type="dns:ttlType" />
+     <attribute name="owner" type="dns:hostType" />
+   </complexType>
+
+   Being abstract, the element 'RR' cannot be instantiated; it is just a
+   placeholder that is designed to be replaced by elements that
+   represent DNS RRs.
+
+   All elements that represent RRs are then defined using the
+   substitutionGroup syntax of XML Schema [W3C.REC-XMLSchema-1].  In
+   order to do this, two requirements must be met
+
+   o  The new element has the substitutionGroup attribute, specifying
+      the 'RR' element as the target.
+
+   o  The new element must be of a type that is defined as an extension
+      of the type 'RRType'.
+
+   For example, the A element is defined in exactly this manner, as
+   shown by this code:
+
+   <element name="A" substitutionGroup="dns:RR" type="dns:AType" />
+
+   <complexType name="AType">
+       <complexContent>
+           <extension base="dns:RRType">
+               <attribute name="address" type="dns:ipaddressType" />
+           </extension>
+       </complexContent>
+   </complexType>
+
+   A new RR defined in a different schema follows exactly the same
+   requirements.  For example, the 'EXAMPLE' RR could be defined as:
+
+   <element name="EXAMPLE" substitutionGroup="dns:RR"
+            type="dns:EXAMPLEType" />
+
+   <complexType name="EXAMPLEType">
+       <complexContent>
+           <extension base="dns:RRType">
+               <attribute name="exampleRDATA" type="dns:hostType" />
+           </extension>
+       </complexContent>
+   </complexType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 16]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+4.3.2.  Creating an extension
+
+   The purpose of an extension is to provide syntax for a DNS RR that is
+   not included in dns-schema.  Extensions are specified in a new XML
+   Schema instance document, which has the following characteristics:
+
+   o  declares its own XML Namespace [W3C.REC-xml-names];
+
+   o  references dns-schema both as a namespace and importing that
+      schema;
+
+   o  uses the extension mechanism to create a new element to represent
+      an RR as described in Section 4.3.1.
+
+   An extension schema to add an element representing a new RR called
+   EXAMPLE would look as follows:
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <schema targetNamespace="http://www.example.org/example-schema"
+      xmlns="http://www.w3.org/2001/XMLSchema"
+      xmlns:ex="http://www.example.org/example-schema"
+      xmlns:dns="urn:ietf:params:xml:ns:dns">
+
+      <annotation>
+          <documentation>Example extension to dns-schema</documentation>
+      </annotation>
+
+      <import namespace="urn:ietf:params:xml:ns:dns"
+          schemaLocation="dns-1.0.xsd"/>
+
+      <element name="EXAMPLE" substitutionGroup="dns:RR"
+               type="ex:EXAMPLEType" />
+
+      <complexType name="EXAMPLEType">
+          <complexContent>
+              <extension base="dns:RRType">
+                  <attribute name="exampleRDATA" type="dns:hostType" />
+              </extension>
+          </complexContent>
+      </complexType>
+
+  </schema>
+
+4.3.3.  Using an extension
+
+   With an extension declared as per Section 4.3.2 it can then be
+   referenced in a XML document that also references dns-schema.  The
+   use of namespaces will keep the references separate.
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 17]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+ <dnsSchema xmlns="urn:ietf:params:xml:ns:dns"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="urn:ietf:params:xml:ns:dns dns-1.0.xsd"
+     xmlns:ex="http://www.example.org/example-schema"
+     xsi:schemaLocation=
+                    "http://www.example.org/example-schema example.xsd">
+
+     <ex:EXAMPLE owner="example" class="IN" ttl="86400"
+                 exampleRDATA="whatever" />
+
+     <A owner="example" class="IN" ttl="86400" address="192.0.2.1" />
+
+ </dnsSchema>
+
+4.4.  Implementing new versions of the schema
+
+   If a new version of the schema is developed that includes within it
+   new RRs already described in third party extensions, the use of XML
+   Namespaces [W3C.REC-xml-names] will ensure that the third party
+   extension can continue to be used.
+
+   If dns-1.1.xsd were now available and the document updated to use
+   that, then the document would still validate correctly.  If the
+   author then wanted to use the 'example' RR from the new version of
+   dns-schema as well as the version from the extension then they could
+   do so as it sits in a different namespace.
+
+4.4.1.  Use of version specific namespaces
+
+   This memo specifies two URNs that can be used to refer to dns-schema.
+   The first of these is a version independent reference
+   'urn:ietf:params:xml:ns:dns', the second is a version specific
+   reference 'urn:ietf:params:xml:ns:dns-1.0'.  A document can use
+   either reference, depending on need.
+
+4.4.2.  Possible type changes in a new version
+
+   A new version may introduce a change to some attributes types in
+   order to maintain the semantic linkage described in Section 5, though
+   this would not affect any documents that use dns-schema.
+
+   This change would occur where an RDATA field existed that was
+   represented by an attribute defined as a base type and a new RR saw a
+   new RDATA field introduced that had the same semantic usage.  This
+   would best be handled by the creation of a new defined type that both
+   the attributes referenced as their type.
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 18]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+5.  Semantic Web considerations
+
+   This schema contains no Resource Description Framework (RDF)
+   [W3C.PR-rdf-concepts-20031215] or variant to provide semantic
+   connections between the data.  It does however use XML Schema
+   [W3C.REC-XMLSchema-2] data types in a consistent form that can be
+   used to derive semantic information at a later date.  It should be
+   noted that there are two types of semantic relationships that exist
+   between RDATA fields but this schema makes no attempt to
+   differentiate them.
+
+   The first is the semantic relationship between the type of RDATA
+   field.  For example, the MX element has an attribute 'exchange' and
+   the NS element has an attribute 'nsdname'; both of these are declared
+   to be of type domainType, since they are both domain names and so a
+   semantic inference as to their equivalence can be drawn.
+
+   The second is the semantic relationship between the usage of the
+   RDATA field.  For example, the SIG and DS elements both have and
+   RDATA field called 'keytag', which represents the same data, not just
+   of the same type.
+
+
+6.  Security Considerations
+
+   This memo raised no security issues.
+
+
+7.  IANA Considerations
+
+   This memo uses URNs to describe XML namespaces [W3C.REC-xml-names]
+   and XML schemas [W3C.REC-XMLSchema-1] conforming to a registry
+   mechanism described in [RFC3688].  Two URI assignments need to be
+   registered by the IANA.
+
+   Registration request for the dns-schema namespace:
+
+   URI:  urn:ietf:params:xml:ns:dns
+
+   Registrant Contact:  See the "Author's Address" section of this memo.
+
+   XML:  None.  Namespace URIs do not represent an XML specification.
+
+   Registration request for the dns-schema version specific namespace:
+
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 19]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   URI:  urn:ietf:params:xml:ns:dns-1.0
+
+   Registrant Contact:  See the "Author's Address" section of this memo.
+
+   XML:  None.  Namespace URIs do not represent an XML specification.
+
+   Registration request for the dns-schema XML schema:
+
+   URI:  urn:ietf:params:xml:schema:dns-1.0
+
+   Registrant Contact:  See the "Author's Address" section of this memo.
+
+   XML:  See Section 8 of this memo.
+
+
+8.  Full Schema
+
+<?xml version="1.0"?>
+<schema targetNamespace="urn:ietf:params:xml:ns:dns"
+  xmlns="http://www.w3.org/2001/XMLSchema"
+  xmlns:dns="urn:ietf:params:xml:ns:dns">
+
+  <annotation>
+    <documentation> dns-schema v1.0 </documentation>
+  </annotation>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- dnsSchema element                 -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="dnsSchema">
+    <complexType>
+      <choice maxOccurs="unbounded">
+        <element ref="dns:RRset"/>
+        <element ref="dns:RR"/>
+      </choice>
+    </complexType>
+  </element>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- RRset element                     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="RRset" type="dns:RRsetType"/>
+
+  <complexType name="RRsetType">
+    <choice>
+      <!-- has to be a <choice> to prevent mixed RRs in an RRset -->
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 20]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+      <element ref="dns:RR" maxOccurs="unbounded"/>
+    </choice>
+    <attribute name="class" type="string"/>
+    <attribute name="type" type="string"/>
+    <attribute name="owner" type="string"/>
+    <attribute name="ttl" type="dns:ttlType"/>
+  </complexType>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- RR abstract element               -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="RR" type="dns:RRType" abstract="true"/>
+
+  <complexType name="RRType" abstract="true">
+    <attribute name="owner" type="dns:domainType"/>
+    <attribute name="class" type="dns:classType"/>
+    <attribute name="ttl" type="dns:ttlType"/>
+  </complexType>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- Attribute types                   -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <simpleType name="domainType">
+    <restriction base="string">
+      <maxLength value="256"/>
+    </restriction>
+  </simpleType>
+
+
+  <simpleType name="classType">
+    <restriction base="string">
+      <maxLength value="2"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="secondsType">
+    <restriction base="unsignedInt"/>
+  </simpleType>
+
+  <simpleType name="secondsSinceEpochType">
+    <union>
+      <simpleType>
+        <restriction base="string">
+          <maxLength value="14"/>
+        </restriction>
+      </simpleType>
+      <simpleType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 21]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+        <restriction base="unsignedInt"/>
+      </simpleType>
+    </union>
+  </simpleType>
+
+  <simpleType name="secondsSinceEpoch48Type">
+    <restriction base="unsignedLong">
+      <maxInclusive value="140737488355329"/>
+      <!-- 2**47+1 -->
+
+
+    </restriction>
+  </simpleType>
+
+
+
+  <simpleType name="ttlType">
+    <restriction base="dns:secondsType"/>
+  </simpleType>
+
+  <simpleType name="ipaddressType">
+    <restriction base="string">
+      <maxLength value="15"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="ip6addressType">
+    <restriction base="string">
+      <maxLength value="45"/>
+      <!-- 45 allows for embedded dotted quad -->
+    </restriction>
+  </simpleType>
+
+  <simpleType name="algorithmType">
+    <union>
+      <simpleType>
+        <restriction base="string"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="unsignedByte"/>
+      </simpleType>
+    </union>
+  </simpleType>
+
+  <simpleType name="certificateTypeType">
+    <union>
+      <simpleType>
+        <restriction base="string"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="unsignedShort"/>
+      </simpleType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 22]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+    </union>
+  </simpleType>
+
+  <simpleType name="keytagType">
+    <restriction base="unsignedShort"/>
+  </simpleType>
+
+  <simpleType name="preferenceType">
+    <restriction base="unsignedShort"/>
+  </simpleType>
+
+  <simpleType name="longitudeType">
+    <restriction base="string"/>
+  </simpleType>
+
+  <simpleType name="latitudeType">
+    <restriction base="string"/>
+  </simpleType>
+
+  <simpleType name="altitudeType">
+    <restriction base="string"/>
+  </simpleType>
+
+  <simpleType name="gatewayType">
+    <union>
+      <simpleType>
+        <restriction base="dns:domainType"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="dns:ipaddressType"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="dns:ip6addressType"/>
+      </simpleType>
+    </union>
+  </simpleType>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- binaryRR element                  -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="binaryRR" substitutionGroup="dns:RR"
+    type="dns:binaryRRType"/>
+
+  <complexType name="binaryRRType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="rrtype" type="unsignedByte" use="required"/>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 23]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+        <attribute name="rdlength" type="unsignedInt" use="required"/>
+        <attribute name="rdata" type="hexBinary" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- A element [RFC1035] (3.4.1)       -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="A" substitutionGroup="dns:RR" type="dns:AType"/>
+
+  <complexType name="AType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="address" type="dns:ipaddressType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- A6 element [RFC2874] (3.1.3)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="A6" substitutionGroup="dns:RR" type="dns:A6Type"/>
+
+  <complexType name="A6Type">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="prefixlength" type="unsignedByte"
+          use="required"/>
+        <!-- TODO 0-128 only -->
+        <attribute name="addresssuffix" type="dns:ip6addressType"
+          use="optional"/>
+        <attribute name="prefixname" type="dns:domainType"
+          use="optional"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- AAAA element [RFC3596] (2.2)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 24]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <element name="AAAA" substitutionGroup="dns:RR" type="dns:AAAAType"/>
+
+  <complexType name="AAAAType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="ip6address" type="dns:ip6addressType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- AFSDB element [RFC1183] (1)       -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="AFSDB" substitutionGroup="dns:RR"
+    type="dns:AFSDBType"/>
+
+  <complexType name="AFSDBType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="subtype" type="unsignedShort" use="required"/>
+        <attribute name="hostname" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- CERT element [RFC2538] (2.2)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="CERT" substitutionGroup="dns:RR" type="dns:CERTType"/>
+
+  <complexType name="CERTType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="type" type="dns:certificateTypeType"
+          use="required"/>
+        <attribute name="keytag" type="unsignedShort" use="required"/>
+        <attribute name="algorithm" type="dns:algorithmType"
+          use="required"/>
+        <attribute name="certificateorcrl" type="base64Binary"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 25]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- CNAME element [RFC1035] (3.3.1)   -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="CNAME" substitutionGroup="dns:RR"
+    type="dns:CNAMEType"/>
+
+  <complexType name="CNAMEType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="host" type="dns:domainType" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- DHCID element [RFC4701] (3.2)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="DHCID" substitutionGroup="dns:RR"
+    type="dns:DHCIDType"/>
+
+  <complexType name="DHCIDType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="rdata" type="base64Binary" use="required" />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- DLV element [RFC4431] (2)         -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="DLV" substitutionGroup="dns:RR" type="dns:DLVType"/>
+
+  <complexType name="DLVType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="keytag" type="dns:keytagType" use="required"/>
+        <attribute name="algorithm" type="dns:algorithmType"
+          use="required"/>
+        <attribute name="digesttype" type="unsignedByte"
+          use="required"/>
+        <attribute name="digest" type="hexBinary" use="required"/>
+      </extension>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 26]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- DNAME element [RFC2672] (3)       -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="DNAME" substitutionGroup="dns:RR"
+    type="dns:DNAMEType"/>
+
+  <complexType name="DNAMEType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="target" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- DNSKEY element [RFC4034] (2.2)    -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="DNSKEY" substitutionGroup="dns:RR"
+    type="dns:DNSKEYType"/>
+
+  <complexType name="DNSKEYType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="flags" type="unsignedShort" use="required"/>
+        <attribute name="protocol" type="unsignedByte" use="required"/>
+        <attribute name="algorithm" type="dns:algorithmType"
+          use="required"/>
+        <attribute name="publickey" type="base64Binary" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- DS element [RFC4034] (5.3)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="DS" substitutionGroup="dns:RR" type="dns:DSType"/>
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 27]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <complexType name="DSType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="keytag" type="dns:keytagType" use="required"/>
+        <attribute name="algorithm" type="dns:algorithmType"
+          use="required"/>
+        <attribute name="digesttype" type="unsignedByte"
+          use="required"/>
+        <attribute name="digest" type="hexBinary" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- GPOS element [RFC1712] (3)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="GPOS" substitutionGroup="dns:RR" type="dns:GPOSType"/>
+
+  <complexType name="GPOSType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="longitude" type="dns:longitudeType"
+          use="required"/>
+        <attribute name="latitude" type="dns:latitudeType"
+          use="required"/>
+        <attribute name="altitude" type="dns:altitudeType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- HINFO element [RFC1035] (3.3.2)   -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="HINFO" substitutionGroup="dns:RR"
+    type="dns:HINFOType"/>
+
+  <complexType name="HINFOType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="cpu" type="string" use="required"/>
+        <attribute name="os" type="string" use="required"/>
+      </extension>
+    </complexContent>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 28]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- IPSECKEY element [RFC4025] (3.1)  -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="IPSECKEY" substitutionGroup="dns:RR"
+    type="dns:IPSECKEYType"/>
+
+  <complexType name="IPSECKEYType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="precedence" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="gatewaytype" type="unsignedByte"
+          use="required"/>
+        <attribute name="gateway" type="dns:gatewayType"
+          use="required"/>
+        <attribute name="publickey" type="base64Binary" use="optional"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- ISDN element [RFC1183] (3.2)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="ISDN" substitutionGroup="dns:RR" type="dns:ISDNType"/>
+
+  <complexType name="ISDNType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="isdn-address" type="string" use="required"/>
+        <!-- should this have a defined type? -->
+        <attribute name="sa" type="string" use="optional"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- KX element [RFC2230] (3.1)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="KX" substitutionGroup="dns:RR" type="dns:KXType"/>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 29]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <complexType name="KXType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="preference" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="exchanger" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- LOC element [RFC1876] (3)         -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="LOC" substitutionGroup="dns:RR" type="dns:LOCType"/>
+
+  <complexType name="LOCType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="version" type="unsignedByte"/>
+        <attribute name="size" type="string" use="optional"/>
+        <attribute name="horizpre" type="string" use="optional"/>
+        <attribute name="vertpre" type="string" use="optional"/>
+        <attribute name="latitude" type="dns:latitudeType"
+          use="required"/>
+        <attribute name="longitude" type="dns:longitudeType"
+          use="required"/>
+        <attribute name="altitude" type="dns:altitudeType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- MB element [RFC1035] (3.3.3)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="MB" substitutionGroup="dns:RR" type="dns:MBType"/>
+
+  <complexType name="MBType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="madname" type="dns:domainType" use="required"
+        />
+      </extension>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 30]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- MG element [RFC1035] (3.3.6)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="MG" substitutionGroup="dns:RR" type="dns:MGType"/>
+
+  <complexType name="MGType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="mgmname" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- MINFO element [RFC1035] (3.3.7)   -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="MINFO" substitutionGroup="dns:RR"
+    type="dns:MINFOType"/>
+
+  <complexType name="MINFOType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="rmailbx" type="dns:domainType" use="required"/>
+        <attribute name="emailbx" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- MR element [RFC1035] (3.3.8)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="MR" substitutionGroup="dns:RR" type="dns:MRType"/>
+
+  <complexType name="MRType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="newname" type="dns:domainType" use="required"
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 31]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- MX element [RFC1035] (3.3.9)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="MX" substitutionGroup="dns:RR" type="dns:MXType"/>
+
+  <complexType name="MXType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="preference" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="exchange" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- NAPTR element [RFC3403] (4.1)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="NAPTR" substitutionGroup="dns:RR"
+    type="dns:NAPTRType"/>
+
+  <complexType name="NAPTRType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="order" type="unsignedInt" use="required"/>
+        <attribute name="preference" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="flags" type="string" use="required"/>
+        <attribute name="services" type="string" use="required"/>
+        <attribute name="regexp" type="string" use="required"/>
+        <attribute name="replacement" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 32]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- NS element [RFC1035] (3.3.11)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="NS" substitutionGroup="dns:RR" type="dns:NSType"/>
+
+  <complexType name="NSType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="nsdname" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- NSAP element [RFC1706] (5)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="NSAP" substitutionGroup="dns:RR" type="dns:NSAPType"/>
+
+  <complexType name="NSAPType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="nsap" type="string" use="required"/>
+        <!-- defined type? -->
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- NSEC element [RFC4034] (4.2)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="NSEC" substitutionGroup="dns:RR" type="dns:NSECType"/>
+
+  <complexType name="NSECType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="nextdomainname" type="dns:domainType"
+          use="required"/>
+        <attribute name="typebitmaps" type="string" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 33]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- NULL element [RFC1035] (3.3.10)   -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="NULL" substitutionGroup="dns:RR" type="dns:NULLType"/>
+
+  <complexType name="NULLType" mixed="true">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="null" type="hexBinary" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- PTR element [RFC1035] (3.3.12)    -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="PTR" substitutionGroup="dns:RR" type="dns:PTRType"/>
+
+  <complexType name="PTRType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="ptrdname" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- PX element [RFC2163] (4)          -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="PX" substitutionGroup="dns:RR" type="dns:PXType"/>
+
+  <complexType name="PXType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="preference" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="map822" type="dns:domainType" use="required"/>
+        <attribute name="mapx400" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 34]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- RP element [RFC1183] (2.2)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="RP" substitutionGroup="dns:RR" type="dns:RPType"/>
+
+  <complexType name="RPType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="mbox-dname" type="dns:domainType"
+          use="required"/>
+        <attribute name="txt-dname" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- RRSIG element [RFC4034] (3.2)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="RRSIG" substitutionGroup="dns:RR"
+    type="dns:RRSIGType"/>
+
+  <complexType name="RRSIGType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="typecovered" type="string" use="required"/>
+        <attribute name="algorithm" type="dns:algorithmType"
+          use="required"/>
+        <attribute name="labels" type="unsignedByte" use="required"/>
+        <attribute name="originalttl" type="dns:ttlType"
+          use="required"/>
+        <attribute name="signatureexpiration"
+          type="dns:secondsSinceEpochType" use="required"/>
+        <attribute name="signatureinception"
+          type="dns:secondsSinceEpochType" use="required"/>
+        <attribute name="keytag" type="dns:keytagType" use="required"/>
+        <attribute name="signersname" type="dns:domainType"
+          use="required"/>
+        <attribute name="signature" type="base64Binary" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 35]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- RT element [RFC1183] (3.3)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="RT" substitutionGroup="dns:RR" type="dns:RTType"/>
+
+  <complexType name="RTType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="preference" type="dns:preferenceType"
+          use="required"/>
+        <attribute name="intermediate-host" type="dns:domainType"
+          use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- SSHFP element [RFC4255] (3.2)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="SSHFP" substitutionGroup="dns:RR"
+    type="dns:SSHFPType"/>
+
+  <complexType name="SSHFPType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="algorithm" type="unsignedByte" use="required"/>
+        <attribute name="fptype" type="unsignedByte" use="required"/>
+        <attribute name="fingerprint" type="hexBinary" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- SOA element [RFC1035] (3.3.13)    -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="SOA" substitutionGroup="dns:RR" type="dns:SOAType"/>
+
+  <complexType name="SOAType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="mname" type="dns:domainType" use="required"/>
+        <attribute name="rname" type="dns:domainType" use="required"/>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 36]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+        <attribute name="serial" type="unsignedInt" use="required"/>
+        <attribute name="refresh" type="dns:secondsType"
+          use="required"/>
+        <attribute name="retry" type="dns:secondsType" use="required"/>
+        <attribute name="expire" type="dns:secondsType" use="required"/>
+        <attribute name="minimum" type="dns:ttlType" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- SPF element [RFC4408] (3.1.1)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="SPF" substitutionGroup="dns:RR" type="dns:SPFType"/>
+
+  <complexType name="SPFType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="rdata" type="string" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- SRV element [RFC2782] (0)         -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="SRV" substitutionGroup="dns:RR" type="dns:SRVType"/>
+
+  <complexType name="SRVType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="priority" type="unsignedShort" use="required"/>
+        <attribute name="weight" type="unsignedShort" use="required"/>
+        <attribute name="port" type="unsignedShort" use="required"/>
+        <attribute name="target" type="dns:domainType" use="required"
+        />
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- TKEY element [RFC2930] (2)        -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 37]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <element name="TKEY" substitutionGroup="dns:RR" type="dns:TKEYType"/>
+
+  <complexType name="TKEYType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="algorithm" type="dns:domainType"
+          use="required"/>
+        <attribute name="inception" type="dns:secondsSinceEpochType"
+          use="required"/>
+        <attribute name="expiration" type="dns:secondsSinceEpochType"
+          use="required"/>
+        <attribute name="mode" type="unsignedShort" use="required"/>
+        <attribute name="error" type="unsignedShort" use="required"/>
+        <attribute name="keysize" type="unsignedShort" use="required"/>
+        <attribute name="keydata" type="hexBinary" use="required"/>
+        <attribute name="othersize" type="unsignedShort"
+          use="optional"/>
+        <attribute name="otherdata" type="hexBinary" use="optional"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- TSIG element [RFC2845] (2.3)      -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="TSIG" substitutionGroup="dns:RR" type="dns:TSIGType"/>
+
+  <complexType name="TSIGType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="algorithm" type="dns:domainType"
+          use="required"/>
+        <attribute name="timesigned"
+          type="dns:secondsSinceEpoch48Type" use="required"/>
+        <attribute name="fudge" type="unsignedShort" use="required"/>
+        <attribute name="mode" type="unsignedShort" use="required"/>
+        <attribute name="macsize" type="unsignedShort" use="required"/>
+        <attribute name="mac" type="hexBinary" use="required"/>
+        <attribute name="originalid" type="unsignedShort"
+          use="required"/>
+        <attribute name="error" type="unsignedShort" use="optional"/>
+        <attribute name="otherlen" type="unsignedShort" use="optional"/>
+        <attribute name="otherdata" type="hexBinary" use="optional"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 38]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- TXT element [RFC1035] (3.3.14)    -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="TXT" substitutionGroup="dns:RR" type="dns:TXTType"/>
+
+  <complexType name="TXTType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="rdata" type="string" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- WKS element [RFC1035] (3.4.2)     -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="WKS" substitutionGroup="dns:RR" type="dns:WKSType"/>
+
+  <complexType name="WKSType">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="address" type="dns:ipaddressType"
+          use="required"/>
+        <attribute name="protocol" type="unsignedByte" use="required"/>
+        <!-- should this have a defined type? -->
+        <attribute name="bitmap" type="hexBinary" use="required"/>
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+  <!-- - - - - - - - - - - - - - - - - - -->
+  <!-- X25 element [RFC1183] (3.1)       -->
+  <!-- - - - - - - - - - - - - - - - - - -->
+
+  <element name="X25" substitutionGroup="dns:RR" type="dns:X25Type"/>
+
+  <complexType name="X25Type">
+    <complexContent>
+      <extension base="dns:RRType">
+        <attribute name="psdn-address" type="string" use="required"/>
+        <!-- should this have a defined type? -->
+      </extension>
+    </complexContent>
+  </complexType>
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 39]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+</schema>
+
+
+9.  Acknowledgments
+
+   I would like to thank Roy Arends, Alex Dalitz, John Dickinson and
+   Stephen Morris for their input and review of this memo.
+
+
+
+10.  References
+
+10.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC2181]  Elz, R. and R. Bush, "Clarifications to the DNS
+              Specification", RFC 2181, July 1997.
+
+   [RFC3597]  Gustafsson, A., "Handling of Unknown DNS Resource Record
+              (RR) Types", RFC 3597, September 2003.
+
+   [W3C.REC-XML]
+              Bray, T., Paoli, J., Sperberg-McQueen, C., and E. Maler,
+              "Extensible Markup Language (XML) 1.0 (Second Edition)", 6
+              October 2000.
+
+   [W3C.REC-XMLSchema-1]
+              Thompson, H., Beech, D., Maloney, M., and N. Mendelsohn,
+              "XML Schema Part 1", 28 October 2004.
+
+   [W3C.REC-XMLSchema-2]
+              Biron, P. and A. Malhotra, "XML Schema Part 2", 28
+              October 2004.
+
+   [W3C.REC-xml-names]
+              Hollander, D., Tobin, R., Bray, T., and A. Layman,
+              "Namespaces in XML 1.0 (Second Edition)", World Wide Web
+              Consortium Recommendation REC-xml-names-20060816,
+              August 2006,
+              <http://www.w3.org/TR/2006/REC-xml-names-20060816>.
+
+10.2.  Informative References
+
+
+   [RFC1002]  NetBIOS Working Group, "Protocol standard for a NetBIOS
+              service on a TCP/UDP transport: Detailed specifications",
+              STD 19, RFC 1002, March 1987.
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 40]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+   [RFC1035]  Mockapetris, P., "Domain names - implementation and
+              specification", STD 13, RFC 1035, November 1987.
+
+   [RFC1183]  Everhart, C., Mamakos, L., Ullmann, R., and P.
+              Mockapetris, "New DNS RR Definitions", RFC 1183,
+              October 1990.
+
+   [RFC1706]  Manning, B. and R. Colella, "DNS NSAP Resource Records",
+              RFC 1706, October 1994.
+
+   [RFC1712]  Farrell, C., Schulze, M., Pleitner, S., and D. Baldoni,
+              "DNS Encoding of Geographical Location", RFC 1712,
+              November 1994.
+
+   [RFC1876]  Davis, C., Vixie, P., Goodwin, T., and I. Dickinson, "A
+              Means for Expressing Location Information in the Domain
+              Name System", RFC 1876, January 1996.
+
+   [RFC2045]  Freed, N. and N. Borenstein, "Multipurpose Internet Mail
+              Extensions (MIME) Part One: Format of Internet Message
+              Bodies", RFC 2045, November 1996.
+
+   [RFC2136]  Vixie, P., Thomson, S., Rekhter, Y., and J. Bound,
+              "Dynamic Updates in the Domain Name System (DNS UPDATE)",
+              RFC 2136, April 1997.
+
+   [RFC2163]  Allocchio, C., "Using the Internet DNS to Distribute MIXER
+              Conformant Global Address Mapping (MCGAM)", RFC 2163,
+              January 1998.
+
+   [RFC2230]  Atkinson, R., "Key Exchange Delegation Record for the
+              DNS", RFC 2230, November 1997.
+
+   [RFC2538]  Eastlake, D. and O. Gudmundsson, "Storing Certificates in
+              the Domain Name System (DNS)", RFC 2538, March 1999.
+
+   [RFC2672]  Crawford, M., "Non-Terminal DNS Name Redirection",
+              RFC 2672, August 1999.
+
+   [RFC2782]  Gulbrandsen, A., Vixie, P., and L. Esibov, "A DNS RR for
+              specifying the location of services (DNS SRV)", RFC 2782,
+              February 2000.
+
+   [RFC2845]  Vixie, P., Gudmundsson, O., Eastlake, D., and B.
+              Wellington, "Secret Key Transaction Authentication for DNS
+              (TSIG)", RFC 2845, May 2000.
+
+   [RFC2874]  Crawford, M. and C. Huitema, "DNS Extensions to Support
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 41]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+              IPv6 Address Aggregation and Renumbering", RFC 2874,
+              July 2000.
+
+   [RFC2930]  Eastlake, D., "Secret Key Establishment for DNS (TKEY
+              RR)", RFC 2930, September 2000.
+
+   [RFC3403]  Mealling, M., "Dynamic Delegation Discovery System (DDDS)
+              Part Three: The Domain Name System (DNS) Database",
+              RFC 3403, October 2002.
+
+   [RFC3596]  Thomson, S., Huitema, C., Ksinant, V., and M. Souissi,
+              "DNS Extensions to Support IP Version 6", RFC 3596,
+              October 2003.
+
+   [RFC3688]  Mealling, M., "The IETF XML Registry", BCP 81, RFC 3688,
+              January 2004.
+
+   [RFC4025]  Richardson, M., "A Method for Storing IPsec Keying
+              Material in DNS", RFC 4025, March 2005.
+
+   [RFC4034]  Arends, R., Austein, R., Larson, M., Massey, D., and S.
+              Rose, "Resource Records for the DNS Security Extensions",
+              RFC 4034, March 2005.
+
+   [RFC4255]  Schlyter, J. and W. Griffin, "Using DNS to Securely
+              Publish Secure Shell (SSH) Key Fingerprints", RFC 4255,
+              January 2006.
+
+   [RFC4408]  Wong, M. and W. Schlitt, "Sender Policy Framework (SPF)
+              for Authorizing Use of Domains in E-Mail, Version 1",
+              RFC 4408, April 2006.
+
+   [RFC4431]  Andrews, M. and S. Weiler, "The DNSSEC Lookaside
+              Validation (DLV) DNS Resource Record", RFC 4431,
+              February 2006.
+
+   [RFC4701]  Stapp, M., Lemon, T., and A. Gustafsson, "A DNS Resource
+              Record (RR) for Encoding Dynamic Host Configuration
+              Protocol (DHCP) Information (DHCID RR)", RFC 4701,
+              October 2006.
+
+   [W3C.PR-rdf-concepts-20031215]
+              Klyne, G. and J. Carroll, "Resource Description Framework
+              (RDF): Concepts and Abstract Syntax", W3C PR PR-rdf-
+              concepts-20031215, December 2003.
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 42]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+Authors' Addresses
+
+   Jay Daley
+   Nominet UK
+   Edmund Halley Road
+   Oxford Science Park
+   Oxford  OX4 4DQ
+   GB
+
+   Phone: +44 1865 332211
+   Email: jay@nominet.org.uk
+
+
+   Stephen Morris
+   Nominet UK
+   Edmund Halley Road
+   Oxford Science Park
+   Oxford  OX4 4DQ
+   GB
+
+   Phone: +44 1865 332211
+   Email: stephen.morris@nominet.org.uk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 43]
+
+Internet-Draft                 dns-schema                   January 2008
+
+
+Full Copyright Statement
+
+   Copyright (C) The IETF Trust (2008).
+
+   This document is subject to the rights, licenses and restrictions
+   contained in BCP 78, and except as set forth therein, the authors
+   retain all their rights.
+
+   This document and the information contained herein are provided on an
+   "AS IS" basis and THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS
+   OR IS SPONSORED BY (IF ANY), THE INTERNET SOCIETY, THE IETF TRUST AND
+   THE INTERNET ENGINEERING TASK FORCE DISCLAIM ALL WARRANTIES, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF
+   THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED
+   WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
+Intellectual Property
+
+   The IETF takes no position regarding the validity or scope of any
+   Intellectual Property Rights or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this document or the extent to which any license under such rights
+   might or might not be available; nor does it represent that it has
+   made any independent effort to identify any such rights.  Information
+   on the procedures with respect to rights in RFC documents can be
+   found in BCP 78 and BCP 79.
+
+   Copies of IPR disclosures made to the IETF Secretariat and any
+   assurances of licenses to be made available, or the result of an
+   attempt made to obtain a general license or permission for the use of
+   such proprietary rights by implementers or users of this
+   specification can be obtained from the IETF on-line IPR repository at
+   http://www.ietf.org/ipr.
+
+   The IETF invites any interested party to bring to its attention any
+   copyrights, patents or patent applications, or other proprietary
+   rights that may cover technology that may be required to implement
+   this standard.  Please address the information to the IETF at
+   ietf-ipr@ietf.org.
+
+
+Acknowledgment
+
+   Funding for the RFC Editor function is provided by the IETF
+   Administrative Support Activity (IASA).
+
+
+
+
+
+Daley & Morris            Expires July 28, 2008                [Page 44]
+

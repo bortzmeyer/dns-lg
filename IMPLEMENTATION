@@ -1,0 +1,9 @@
+DNS access
+**********
+
+As of 2012-06-21, DNS Looking Glass uses DNS Python for DNS access. It
+works with the high-level interface (dns.resolver) which has several
+limitations (retries when the answer is REFUSED or SERVFAIL, which is
+stupid and leads to spurious timeouts, no support for ANY query type,
+etc). In the future, DNS Looking Glass may switch to the low-level
+interface.
