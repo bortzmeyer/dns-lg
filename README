@@ -156,9 +156,9 @@ HTTP server with WSGI support. Browse the Web!
 TODO: document the special files such as robots.txt (see the comments
 at the end of DNSLG/__init__.py)
 
-TODO CRIT: official source at github
-
-TODO CRIT: bug reports at github
+The official source is at Github
+<https://github.com/bortzmeyer/dns-lg>. The best place to report bugs,
+submit patches and give opinions is through the Github issue tracker.
 
 Tests
 *****
@@ -180,7 +180,9 @@ http://www.whatsmydns.net/ REST URLs but no API
 Author
 ******
 
-Written by Stephane Bortzmeyer <bortzmeyer+dnslg@nic.fr>. 
+Written by Stephane Bortzmeyer <bortzmeyer+dnslg@nic.fr>. (To report
+bugs and submit patches, I suggest that you use the Github issue
+tracker instead of email.)
 
 Favicon <http://www.favicon.cc/?action=icon&file_id=513990>, 
 by Philippe Regnauld <http://www.favicon.cc/?action=icon_list&user_id=155740>
