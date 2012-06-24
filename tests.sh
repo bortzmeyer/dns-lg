@@ -193,3 +193,10 @@ echo "Test with broken domains (all NS unreachable, for instance)"
 ${WEB} ${URL}/lame.broken-on-purpose.generic-nic.net/SOA?format=text
 ${WEB} ${URL}/lame2.broken-on-purpose.generic-nic.net/SOA?format=text
 echo ""
+
+# Various HTTP tricks
+
+# This one requires curl, to have custom headers
+echo Test methods other than GET (should be refused)
+curl --head ${URL}/example.org/A
+curl --data STUFF ${URL}/example.org/A

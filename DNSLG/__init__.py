@@ -297,6 +297,8 @@ Disallow: /
         return [output]
     
     def application(self, environ, start_response):
+        plaintype = 'text/plain; charset=%s' % self.encoding
+        # TODO see issue #1 about HEAD support
         if environ['REQUEST_METHOD'] != 'GET':
             output = environ['REQUEST_METHOD']
             send_response(start_response, '405 Method not allowed', output, plaintype)
