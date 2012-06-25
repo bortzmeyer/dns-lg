@@ -81,7 +81,7 @@ class Querier:
         # sure of *which* name server actually replied (TODO: question
         # sent on the dnspython mailing lst on 2012-05-20). POssible
         # improvment: use the low-level interface of DNS Python and
-        # handles this ourselves.
+        # handles this ourselves. See issue #3.
         # Default is to use EDNS without the DO bit
         if self.edns_size is not None:
             self.resolver.use_edns(0, 0, self.edns_size)
@@ -290,10 +290,10 @@ Disallow: /
             output = formatter.result(self)
             send_response(start_response, '200 OK', output, mtype)
         # TODO: other exceptions, specially SERVFAIL (for instance
-        # with bogus DNSSEC like
-        # reverseddates-A.test.dnssec-tools.org. dnspython apparently
-        # returns Timeout :-( Fixing this will probably require to
-        # switch to the low-level interface of DNS Python.
+        # with bogus DNSSEC like reverseddates-A.test.dnssec-tools.org
+        # (see issue #4). dnspython apparently returns Timeout :-(
+        # Fixing this will probably require to switch to the low-level
+        # interface of DNS Python. See issue #3.
         return [output]
     
     def application(self, environ, start_response):
@@ -322,6 +322,7 @@ Disallow: /
             dotcp = queries.get("tcp", '')
             tcp = not(len(dotcp) == 0 or dotcp[0] == "0" or \
                             dotcp[0].lower() == "false" or dotcp[0] == "")
+            # TODO: CD bit. See issue #4
             doreverse = queries.get("reverse", '')
             reverse = not(len(doreverse) == 0 or doreverse[0] == "0" or \
                             doreverse[0].lower() == "false" or doreverse[0] == "")

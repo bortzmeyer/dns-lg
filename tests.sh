@@ -194,6 +194,12 @@ ${WEB} ${URL}/lame.broken-on-purpose.generic-nic.net/SOA?format=text
 ${WEB} ${URL}/lame2.broken-on-purpose.generic-nic.net/SOA?format=text
 echo ""
 
+echo "Test with invalid (DNSSEC) domains"
+for domain in www.dnssec-failed.org. reverseddates-A.test.dnssec-tools.org; do
+    ${WEB} ${URL}/${domain}/SOA?format=text
+done
+delay
+
 # Various HTTP tricks
 
 # This one requires curl, to have custom headers
