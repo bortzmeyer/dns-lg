@@ -125,7 +125,8 @@ Disallow: /
         if not path.startswith('/'):
             raise Exception("Internal error: no / at the beginning of %s" % path)
         plaintype = 'text/plain; charset=%s' % self.encoding
-        if format == "TEXT":
+        if format == "TEXT" or format == "TXT":
+            format = "TEXT"
             mtype = 'text/plain; charset=%s' % self.encoding
         elif format == "HTML":
             mtype = 'text/html; charset=%s' % self.encoding
