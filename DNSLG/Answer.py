@@ -1,8 +1,12 @@
 import dns.resolver
+import dns.message
 
-class ExtendedAnswer(dns.resolver.Answer):
-    def __init__(self, initial_answer):
-        self.qname = initial_answer.qname
-        self.rrsets = [initial_answer.rrset,]
-        self.owner_name = initial_answer.rrset.name
-
+class ExtendedAnswer(dns.message.Message):
+    
+    def __init__(self, initial_msg):
+        #for field in initial_msg.__attr__:
+        #    self.field = initial_msg.field
+        super(ExtendedAnswer, self).__init__()
+        self.nameserver = None
+        self.qname = None
+        

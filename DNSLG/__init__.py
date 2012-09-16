@@ -18,6 +18,7 @@ import netaddr
 import Formatter
 from LeakyBucket import LeakyBucket
 import Answer
+import Resolver
 
 # If you need to change thse values, it is better to do it when
 # calling the Querier() constructor.
@@ -53,8 +54,7 @@ class Querier:
                  whitelist=default_whitelist, edns_size=default_edns_size,
                  handle_wk_files=default_handle_wk_files,
                  google_code=None, description=None, description_html=None):
-        self.resolver = dns.resolver.Resolver()
-        self.default_nameservers = self.resolver.nameservers
+        self.resolver = Resolver.Resolver(edns_payload=edns_size)
         self.buckets = {}
         self.base_url = base_url
         self.whitelist = whitelist
@@ -68,27 +68,12 @@ class Querier:
         else:
             self.favicon = None
         self.encoding = encoding
-        self.edns_size = edns_size
         self.bucket_size = default_bucket_size
         self.google_code = google_code
         self.description = description
         self.description_html = description_html
-        self.reset_resolver()
+        self.resolver.reset()
         
-    def reset_resolver(self):
-        self.resolver.nameservers = self.default_nameservers[0:1] # Yes, it
-        # decreases resilience but it seems it is the only way to be
-        # sure of *which* name server actually replied (TODO: question
-        # sent on the dnspython mailing lst on 2012-05-20). POssible
-        # improvment: use the low-level interface of DNS Python and
-        # handles this ourselves. See issue #3.
-        # Default is to use EDNS without the DO bit
-        if self.edns_size is not None:
-            self.resolver.use_edns(0, 0, self.edns_size)
-        else:
-            self.resolver.use_edns(-1, 0, 0)
-        self.resolver.search = []
-            
     def default(self, start_response, path):
         output = """
 I'm the default handler, \"%s\" was called.
@@ -223,27 +208,24 @@ Disallow: /
                 formatter = Formatter.ZoneFormatter(domain)
             elif format == "XML":
                 formatter = Formatter.XmlFormatter(domain)
-            self.reset_resolver()
+            self.resolver.reset()
             if do_dnssec:
-                self.resolver.use_edns(0, dns.flags.DO, edns_size)
+                self.resolver.use_edns(0, edns_size)
             if alt_resolver:
-                self.resolver.nameservers = [alt_resolver,]
+                self.resolver.set_nameservers([alt_resolver,])
             query_start = datetime.now()
             if qtype != "ADDR":
-                answers = self.resolver.query(qdomain, qtype, tcp=tcp)
-                answer = Answer.ExtendedAnswer(answers)
+                answer = self.resolver.query(qdomain, qtype, tcp=tcp)
             else:
+                # TODO CRIT refaire completement
                 try:
                     answers = self.resolver.query(qdomain, "A", tcp=tcp)
-                    answer = Answer.ExtendedAnswer(answers)
                 except dns.resolver.NoAnswer: 
                     answer = None
                 try:
                     answers = self.resolver.query(qdomain, "AAAA", tcp=tcp)
                     if answer is not None:
                         answer.rrsets.append(answers.rrset)
-                    else:
-                        answer = Answer.ExtendedAnswer(answers)
                 except dns.resolver.NoAnswer: 
                     pass  
                 # TODO: what if flags are different with A and AAAA? (Should not happen)
@@ -256,7 +238,7 @@ Disallow: /
                     return [output]
             query_end = datetime.now()
             self.delay = query_end - query_start
-            formatter.format(answer, qtype, answers.response.flags, self)
+            formatter.format(answer, qtype, answer.flags, self)
             output = formatter.result(self)
             send_response(start_response, '200 OK', output, mtype)
         except dns.resolver.NXDOMAIN:

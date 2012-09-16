@@ -52,9 +52,6 @@ class TextFormatter(Formatter):
         self.output = ""
         self.output += "Query for: %s, type %s\n" % (self.domain.encode(querier.encoding),
                                                    qtype)
-        if answer is not None and (str(answer.owner_name) != self.domain):
-            self.output += "Result name: %s\n" % \
-                           str(answer.owner_name).encode(querier.encoding)
         str_flags = ""
         if flags & dns.flags.AD:
             str_flags += "/ Authentic Data "
@@ -66,7 +63,7 @@ class TextFormatter(Formatter):
         if answer is None:
             self.output += "[No data for this query type]\n"
         else:
-            for rrset in answer.rrsets:
+            for rrset in answer.answer:
                 for rdata in rrset:
                     if rdata.rdtype == dns.rdatatype.A or rdata.rdtype == dns.rdatatype.AAAA:
                         self.output += "IP address: %s\n" % rdata.address
@@ -158,10 +155,10 @@ class ZoneFormatter(Formatter):
         if answer is None:
             self.output += "; No data for this type\n"
         else:
-            for rrset in answer.rrsets:
+            for rrset in answer.answer:
                 for rdata in rrset:
                     # TODO: do not hardwire the class
-                    self.output += "%s\tIN\t" % answer.owner_name # TODO: do not repeat the name if there is a RRset
+                    self.output += "%s\tIN\t" % answer.name # TODO: do not repeat the name if there is a RRset
                     # TODO: it could use some refactoring: most (but _not all_) of types
                     # use the same code.
                     if rdata.rdtype == dns.rdatatype.A:
@@ -238,8 +235,8 @@ class JsonFormatter(Formatter):
         if flags & dns.flags.TC:
             self.object['TC'] = True
         self.object['AnswerSection'] = []
-        if answer is not None:
-            for rrset in answer.rrsets:
+        if answer.answer is not None:
+            for rrset in answer.answer:
                 for rdata in rrset: # TODO: sort them? For instance by preference for MX?
                     if rdata.rdtype == dns.rdatatype.A:
                         self.object['AnswerSection'].append({'Type': 'A', 'Address': rdata.address})
@@ -313,7 +310,7 @@ class JsonFormatter(Formatter):
                     else:
                         self.object['AnswerSection'].append({'Type': "unknown"}) # TODO: the type number
                     self.object['AnswerSection'][-1]['TTL'] = rrset.ttl
-                    self.object['AnswerSection'][-1]['Name'] = str(answer.owner_name)
+                    self.object['AnswerSection'][-1]['Name'] = str(rrset.name)
         try:
             duration = querier.delay.total_seconds()
         except AttributeError: # total_seconds appeared only with Python 2.7
@@ -451,7 +448,6 @@ class XmlFormatter(Formatter):
         addresses = []
         if answer is not None:
             self.rrsets = []
-            self.acontext.addGlobal ("ownername", answer.owner_name)
             if flags & dns.flags.AD:
                 ad = 1
             else:
@@ -468,7 +464,7 @@ class XmlFormatter(Formatter):
                 aa = 0
             self.context.addGlobal ("aa", aa)
             # TODO: class
-            for rrset in answer.rrsets:
+            for rrset in answer.answer:
                 records = []
                 self.acontext.addGlobal ("ttl", rrset.ttl)
                 self.acontext.addGlobal ("type", dns.rdatatype.to_text(rrset.rdtype))
@@ -828,11 +824,8 @@ class HtmlFormatter(Formatter):
             self.context.addGlobal ("flags", str_flags)
         if answer is not None:
             self.rrsets = []
-            if str(answer.owner_name).lower() != self.domain.lower():
-                self.context.addGlobal ("distinctowner", True)
-            self.context.addGlobal ("ownername", answer.owner_name)
             icontext = simpleTALES.Context(allowPythonPath=False)
-            for rrset in answer.rrsets:
+            for rrset in answer.answer:
                 records = []
                 for rdata in rrset:
                     iresult = simpleTALUtils.FastStringOutput()
