@@ -53,7 +53,8 @@ class Querier:
                  bucket_size=default_bucket_size,
                  whitelist=default_whitelist, edns_size=default_edns_size,
                  handle_wk_files=default_handle_wk_files,
-                 google_code=None, description=None, description_html=None):
+                 google_code=None, description=None, description_html=None, 
+                 forbidden_suffixes=[]):
         self.resolver = Resolver.Resolver(edns_payload=edns_size)
         self.buckets = {}
         self.base_url = base_url
@@ -72,6 +73,12 @@ class Querier:
         self.google_code = google_code
         self.description = description
         self.description_html = description_html
+        self.forbidden_suffixes = []
+        for suffix in forbidden_suffixes:
+            if suffix != '':
+                if not suffix.endswith('.'):
+                    suffix += '.'
+                self.forbidden_suffixes.append(suffix)
         self.resolver.reset()
         
     def default(self, start_response, path):
@@ -185,7 +192,13 @@ Disallow: /
             domain += '.'
         if domain == 'root.':
             domain = '.'
-        domain = unicode(domain, self.encoding)    
+        domain = unicode(domain, self.encoding)
+        for forbidden in self.forbidden_suffixes:
+            if domain.endswith(forbidden):
+                output = "You cannot query local domain %s" % forbidden
+                send_response(start_response, '403 Local domain is private',
+                              output, plaintype)
+                return [output]
         punycode_domain = punycode_of(domain)
         if punycode_domain != domain:
             qdomain = punycode_domain.encode("US-ASCII")
