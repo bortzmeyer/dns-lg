@@ -4,6 +4,7 @@ import wsgiref.simple_server as server
 import os
 import getopt
 import sys
+import string
 import ConfigParser
 
 config_file = os.path.expanduser("~/.dnslg.ini")
@@ -56,6 +57,8 @@ description = config.get(SECTION, 'description')
 description_html = config.get(SECTION, 'description_html')
 google_code = config.get(SECTION, 'code_google_webmasters')
 edns_size = config.get(SECTION, 'size_edns')
+forbidden_str = config.get(SECTION, 'forbidden_suffixes')
+forbidden = string.split(forbidden_str, ':')
 if edns_size is None or edns_size == "":
     edns_size = None
 else:
@@ -68,7 +71,8 @@ querier = DNSLG.Querier(email_admin=email_admin, url_doc=url_doc, url_css=url_cs
                         edns_size=edns_size, bucket_size=rl_bucket_size,
                         google_code=google_code,
                         handle_wk_files=handle_wellknown_files,
-                        description=description, description_html=description_html)
+                        description=description, description_html=description_html,
+                        forbidden_suffixes=forbidden)
 # TODO listen on IPv6 as well
 httpd = server.make_server("", port, querier.application)
 print "Serving HTTP on port %i..." % port
