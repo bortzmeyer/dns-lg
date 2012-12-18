@@ -48,7 +48,7 @@ MX:
   * MailExchanger
 
 NS: 
-  * Name
+  * Target
 
 PTR:
   * Target

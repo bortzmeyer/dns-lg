@@ -175,6 +175,7 @@ echo ""
 echo Options
 for format in text zone xml html json; do
     ${WEB} ${URL}/afnic.fr/SOA?format=${format}\&dodnssec=1
+    ${WEB} ${URL}/afnic.fr/SOA?format=${format}\&dodnssec=1\&cd=1
     ${WEB} ${URL}/afnic.fr/SOA?format=${format}\&tcp=1
     ${WEB} ${URL}/afnic.fr/SOA?format=${format}\&buffersize=0
     ${WEB} ${URL}/afnic.fr/SOA?format=${format}\&buffersize=512
@@ -198,13 +199,14 @@ echo ""
 
 echo "Test with invalid (DNSSEC) domains"
 for domain in www.dnssec-failed.org. reverseddates-A.test.dnssec-tools.org; do
-    ${WEB} ${URL}/${domain}/SOA?format=text
+    ${WEB} ${URL}/${domain}/A?format=text\&dodnssec=1
+    ${WEB} ${URL}/${domain}/A?format=text\&dodnssec=1\&cd=1
 done
 delay
 
 # Various HTTP tricks
 
 # This one requires curl, to have custom headers
-echo Test methods other than GET (should be refused)
-curl --head ${URL}/example.org/A
-curl --data STUFF ${URL}/example.org/A
+echo "Test methods other than GET (should be refused)"
+${WEB} --head ${URL}/example.org/A
+${WEB} --data STUFF ${URL}/example.org/A

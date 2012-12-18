@@ -102,7 +102,7 @@ Disallow: /
         return [output]
 
     def query(self, start_response, path, client, format="HTML", alt_resolver=None,
-              do_dnssec=False, tcp=False, edns_size=default_edns_size,
+              do_dnssec=False, tcp=False, cd=False, edns_size=default_edns_size,
               reverse=False):
         """ path must starts with a /, then the domain name then an
         (optional) / followed by the QTYPE """
@@ -181,12 +181,6 @@ Disallow: /
                               output, plaintype)
                 return [output]
             # Pseudo-qtype ADDR is handled specially later
-            # Alas, dnspython does not react properly to QTYPE=ANY :-(
-            if qtype == "ANY":
-                output = "dnspython does not support ANY queries, sorry\n" 
-                send_response(start_response, '400 Bad record type', output, 
-                              plaintype)
-                return [output]
         if not domain.endswith('.'):
             domain += '.'
         if domain == 'root.':
@@ -210,22 +204,22 @@ Disallow: /
                 formatter = Formatter.XmlFormatter(domain)
             self.resolver.reset()
             if do_dnssec:
-                self.resolver.use_edns(0, edns_size)
+                self.resolver.set_edns(dnssec=True)
             if alt_resolver:
                 self.resolver.set_nameservers([alt_resolver,])
             query_start = datetime.now()
             if qtype != "ADDR":
-                answer = self.resolver.query(qdomain, qtype, tcp=tcp)
+                answer = self.resolver.query(qdomain, qtype, tcp=tcp, cd=cd)
             else:
-                # TODO CRIT refaire completement
                 try:
-                    answers = self.resolver.query(qdomain, "A", tcp=tcp)
+                    answer = self.resolver.query(qdomain, "A", tcp=tcp, cd=cd)
                 except dns.resolver.NoAnswer: 
                     answer = None
                 try:
-                    answers = self.resolver.query(qdomain, "AAAA", tcp=tcp)
-                    if answer is not None:
-                        answer.rrsets.append(answers.rrset)
+                    answer_bis = self.resolver.query(qdomain, "AAAA", tcp=tcp, cd=cd)
+                    if answer_bis is not None:
+                        for rrset in answer_bis.answer:
+                            answer.answer.append(rrset)
                 except dns.resolver.NoAnswer: 
                     pass  
                 # TODO: what if flags are different with A and AAAA? (Should not happen)
@@ -241,42 +235,43 @@ Disallow: /
             formatter.format(answer, qtype, answer.flags, self)
             output = formatter.result(self)
             send_response(start_response, '200 OK', output, mtype)
-        except dns.resolver.NXDOMAIN:
+        except Resolver.UnknownRRtype:
+            output = "Record type %s does not exist\n" % qtype
+            output = output.encode(self.encoding)
+            send_response(start_response, '400 Unknown record type', output, 
+                          plaintype)
+        except Resolver.NoSuchDomainName:
             output = "Domain %s does not exist\n" % domain
             output = output.encode(self.encoding)
             # TODO send back HTML if this is the expected format
             send_response(start_response, '404 No such domain', output, plaintype)
-        except dns.resolver.NoNameservers:
-            output = "No working server for domain %s\n" % domain
+        except Resolver.Refused:
+            output = "Refusal to answer for all name servers for %s\n" % domain
             output = output.encode(self.encoding)
-            # TODO send back HTML if this is the expected format
-            send_response(start_response, '404 No such domain', output, plaintype)
-        except dns.resolver.Timeout: # dnspython seems to raise this, not only when
-            # there is an actual timeout, but also when all the authoritative
-            # servers reply REFUSED.
-            output = "No server reply for domain %s\n" % domain
+            send_response(start_response, '403 Refused', output, plaintype)
+        except Resolver.Servfail:
+            output = "Server failure for all name servers for %s (may be a DNSSEC validation error)\n" % domain
+            output = output.encode(self.encoding)
+            send_response(start_response, '504 Servfail', output, plaintype)
+        except Resolver.Timeout: 
+            output = "No server replies for domain %s\n" % domain
             output = output.encode(self.encoding)
             # TODO send back HTML if this is the expected format. In
             # that case, do not serialize output.
             send_response(start_response, '504 Timeout', output,
                           "text/plain")
-        except dns.rdatatype.UnknownRdatatype:
-            output = "Record type %s does not exist\n" % qtype
+        except Resolver.NoPositiveAnswer: 
+            output = "No server replies for domain %s\n" % domain
             output = output.encode(self.encoding)
-            send_response(start_response, '400 Unknown record type', output, 
-                          plaintype)
-        except dns.resolver.NoAnswer: # TODO: use raise_on_no_answer=False in query() ?
-            # It appeared apparently only with dnspython 1.9.
-            query_end = datetime.now()
-            self.delay = query_end - query_start
-            formatter.format(None, qtype, 0, self)
-            output = formatter.result(self)
-            send_response(start_response, '200 OK', output, mtype)
-        # TODO: other exceptions, specially SERVFAIL (for instance
-        # with bogus DNSSEC like reverseddates-A.test.dnssec-tools.org
-        # (see issue #4). dnspython apparently returns Timeout :-(
-        # Fixing this will probably require to switch to the low-level
-        # interface of DNS Python. See issue #3.
+            # TODO send back HTML if this is the expected format. In
+            # that case, do not serialize output.
+            send_response(start_response, '504 No positive answer', output,
+                          "text/plain")
+        except Resolver.UnknownError as code:
+            output = "Unknown error %s resolving %s\n" % (dns.rcode.to_text(int(str(code))), domain)
+            output = output.encode(self.encoding)
+            # TODO send back HTML if this is the expected format
+            send_response(start_response, '500 Unknown server error', output, plaintype)
         return [output]
     
     def application(self, environ, start_response):
@@ -305,11 +300,20 @@ Disallow: /
             dotcp = queries.get("tcp", '')
             tcp = not(len(dotcp) == 0 or dotcp[0] == "0" or \
                             dotcp[0].lower() == "false" or dotcp[0] == "")
-            # TODO: CD bit. See issue #4
+
+            docd = queries.get("cd", '')
+            cd = not(len(docd) == 0 or docd[0] == "0" or \
+                            docd[0].lower() == "false" or docd[0] == "")
             doreverse = queries.get("reverse", '')
             reverse = not(len(doreverse) == 0 or doreverse[0] == "0" or \
                             doreverse[0].lower() == "false" or doreverse[0] == "")
             buffersize = int(queries.get("buffersize", [default_edns_size])[0])
+            if cd:
+                if not do_dnssec:
+                    output = "Incompatible arguments"
+                    send_response(start_response, '400 CD is meaningful only for DNSSEC',
+                                  output, plaintype)
+                    return [output]
             if buffersize == 0:
                 if do_dnssec:
                     output = "Buffer size = 0"
@@ -342,7 +346,7 @@ Disallow: /
             pure_path = path[len(self.base_url):]
             # TODO: content negotiation? Find the output format from Accept headers?
             return self.query(start_response, pure_path, client, format, resolver,
-                              do_dnssec, tcp, edns_size, reverse)
+                              do_dnssec, tcp, cd, edns_size, reverse)
         else:
             return self.default(start_response, path)
 

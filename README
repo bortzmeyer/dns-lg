@@ -68,6 +68,9 @@ To activate DNSSEC in the responses (to send the DO bit), use option
 dodnssec=1 in the URL. This option will allow you (if the resolver
 supports it) to see the AD (Authentic Data) flag.
 
+To disable DNSSEC validation (if the resolver does it and you don't
+want it), use option cd=1 (cd = Checking Disabled)
+
 To use TCP (instead of UDP) for the request, use option tcp=1 in the
 URL.
 

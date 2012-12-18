@@ -88,6 +88,8 @@ class TextFormatter(Formatter):
                                        (rdata.key_tag, rdata.digest_type)
                     elif rdata.rdtype == dns.rdatatype.RRSIG:
                         pass # Should we show signatures?
+                    elif rdata.rdtype == dns.rdatatype.NSEC or rdata.rdtype == dns.rdatatype.NSEC3:
+                        pass # Should we show NSEC*?
                     elif rdata.rdtype == dns.rdatatype.LOC:
                         self.output += "Location: longitude %i degrees %i' %i\" latitude %i degrees %i' %i\" altitude %f\n" % \
                                        (rdata.longitude[0], rdata.longitude[1], rdata.longitude[2],
@@ -108,6 +110,8 @@ class TextFormatter(Formatter):
                             # always available on 2012-05-17
                             pass
                         self.output += "algorithm %i, flags %i\n" % (rdata.algorithm, rdata.flags)
+                    elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
+                        self.output += "NSEC3PARAM: algorithm %i, iterations %i\n" % (rdata.algorithm, rdata.iterations) # TODO format salt (tagged as string but actually binaty)
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         self.output += "SSH fingerprint: algorithm %i, digest type %i, fingerprint %s\n" % \
                                        (rdata.algorithm, rdata.fp_type, to_hexstring(rdata.fingerprint))
@@ -119,7 +123,10 @@ class TextFormatter(Formatter):
                                        rdata.regexp, str(rdata.replacement), rdata.service)
                     else:
                         self.output += "Unknown record type %i: (DATA)\n" % rdata.rdtype
-                self.output += "TTL: %i\n" % rrset.ttl
+                if rdata.rdtype != dns.rdatatype.RRSIG and \
+                       rdata.rdtype != dns.rdatatype.NSEC and \
+                       rdata.rdtype != dns.rdatatype.NSEC3:
+                    self.output += "TTL: %i\n" % rrset.ttl
         self.output += "Resolver queried: %s\n" % querier.resolver.nameservers[0]
         self.output += "Query done at: %s\n" % time.strftime("%Y-%m-%d %H:%M:%SZ",
                                                              time.gmtime(time.time()))
@@ -158,7 +165,8 @@ class ZoneFormatter(Formatter):
             for rrset in answer.answer:
                 for rdata in rrset:
                     # TODO: do not hardwire the class
-                    self.output += "%s\tIN\t" % answer.name # TODO: do not repeat the name if there is a RRset
+                    if rdata.rdtype != dns.rdatatype.RRSIG:
+                        self.output += "%s\tIN\t" % answer.qname # TODO: do not repeat the name if there is a RRset
                     # TODO: it could use some refactoring: most (but _not all_) of types
                     # use the same code.
                     if rdata.rdtype == dns.rdatatype.A:
@@ -203,7 +211,8 @@ class ZoneFormatter(Formatter):
                     else:
                         # dnspython dumps the types it knows. TODO: uses that?
                         self.output += "TYPE%i ; DATA %s\n" % (rdata.rdtype, rdata.to_text())
-                self.output += "; TTL: %i\n" % rrset.ttl
+                if rdata.rdtype != dns.rdatatype.RRSIG:
+                    self.output += "; TTL: %i\n\n" % rrset.ttl # TODO: put it in the zone, not as a comment
         self.output += "\n; Server: %s\n" % querier.resolver.nameservers[0]
         self.output += "; When: %s\n" % time.strftime("%Y-%m-%d %H:%M:%SZ",
                                                              time.gmtime(time.time()))
@@ -268,7 +277,7 @@ class JsonFormatter(Formatter):
                                                              'Minimum': rdata.minimum,
                                                              })
                     elif rdata.rdtype == dns.rdatatype.NS:
-                        self.object['AnswerSection'].append({'Type': 'NS', 'Name': str(rdata.target)})
+                        self.object['AnswerSection'].append({'Type': 'NS', 'Target': str(rdata.target)})
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         returned_object = {'Type': 'DNSKEY',
                                           'Algorithm': rdata.algorithm,
@@ -309,8 +318,9 @@ class JsonFormatter(Formatter):
                                                              'Weight': rdata.weight})
                     else:
                         self.object['AnswerSection'].append({'Type': "unknown"}) # TODO: the type number
-                    self.object['AnswerSection'][-1]['TTL'] = rrset.ttl
-                    self.object['AnswerSection'][-1]['Name'] = str(rrset.name)
+                    if rdata.rdtype != dns.rdatatype.RRSIG:
+                        self.object['AnswerSection'][-1]['TTL'] = rrset.ttl
+                        self.object['AnswerSection'][-1]['Name'] = str(rrset.name)
         try:
             duration = querier.delay.total_seconds()
         except AttributeError: # total_seconds appeared only with Python 2.7
@@ -328,7 +338,7 @@ class JsonFormatter(Formatter):
 
             
     def result(self, querier):
-        return json.dumps(self.object) + "\n"
+        return json.dumps(self.object, indent=True) + "\n"
 
 
 # XML
