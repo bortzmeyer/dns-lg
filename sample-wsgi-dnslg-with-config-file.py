@@ -32,7 +32,7 @@ except IOError:
     print >>sys.stderr, "Cannot open configuration file %s" % config_file_name
     sys.exit(1)
 config.readfp(config_file)
-config.set('DEFAULT', 'forbidden_domains', '')
+config.set('DEFAULT', 'forbidden_suffixes', '')
 if not config.has_section(SECTION):
     config.add_section(SECTION)
 email_admin = config.get(SECTION, 'email_administrator')
@@ -48,7 +48,7 @@ description = config.get(SECTION, 'description')
 description_html = config.get(SECTION, 'description_html')
 google_code = config.get(SECTION, 'code_google_webmasters')
 edns_size = config.get(SECTION, 'size_edns')
-forbidden_str = config.get(SECTION, 'forbidden_domains')
+forbidden_str = config.get(SECTION, 'forbidden_suffixes')
 forbidden = string.split(forbidden_str, ':')
 if edns_size is None or edns_size == "":
     edns_size = None
