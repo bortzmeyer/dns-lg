@@ -6,8 +6,10 @@ import base64
 import platform
 import pkg_resources 
 import time
+import struct
 
 # TODO: Accept explicit requests for CNAME and DNAME?
+# TODO CRIT: handle CNAME better
 # TODO: DANE/TLSA record type. Not yet in DNS Python so not easy...
 
 import Answer
@@ -18,6 +20,21 @@ def to_hexstring(str):
         result += ("%x" % ord(char))
     return result.upper()
 
+def keylength(alg, key):
+    """ Returns the length in bits """
+    if alg == 5 or alg == 7 or alg == 8:
+        # RSA, RFC 3110
+        firstbyte = struct.unpack("B", key[0])[0]
+        if firstbyte > 0:
+            exponentlength =  firstbyte + 1
+            return (len(key)-exponentlength)*8
+        else:
+            exponentlength = struct.unpack(">H", key[1:3])[0] + 3
+            return (len(key)-exponentlength)*8
+    else:
+        # Unknown, best guess
+        return len(key)*8
+    
 class Formatter():
     """ This ia the base class for the various Formatters. A formatter
     takes a "DNS answer" object and format it for a given output
@@ -112,6 +129,8 @@ class TextFormatter(Formatter):
                         self.output += "algorithm %i, flags %i\n" % (rdata.algorithm, rdata.flags)
                     elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
                         self.output += "NSEC3PARAM: algorithm %i, iterations %i\n" % (rdata.algorithm, rdata.iterations) # TODO format salt (tagged as string but actually binaty)
+                        self.output += "algorithm %i, length %i bits, flags %i\n" % \
+                                       (rdata.algorithm, keylength(rdata.algorithm, rdata.key), rdata.flags)
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         self.output += "SSH fingerprint: algorithm %i, digest type %i, fingerprint %s\n" % \
                                        (rdata.algorithm, rdata.fp_type, to_hexstring(rdata.fingerprint))
@@ -280,6 +299,7 @@ class JsonFormatter(Formatter):
                         self.object['AnswerSection'].append({'Type': 'NS', 'Target': str(rdata.target)})
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         returned_object = {'Type': 'DNSKEY',
+                                           'Length': keylength(rdata.algorithm, rdata.key),
                                           'Algorithm': rdata.algorithm,
                                           'Flags': rdata.flags}
                         try:
@@ -398,7 +418,7 @@ dlv_xml_template = """
 """
 # TODO: keytag is an extension to the Internet-Draft
 dnskey_xml_template = """
-<DNSKEY tal:attributes="flags flags; protocol protocol; algorithm algorithm; publickey key; keytag keytag"/>
+<DNSKEY tal:attributes="flags flags; protocol protocol; algorithm algorithm; length length; publickey key; keytag keytag"/>
 """
 sshfp_xml_template = """
 <SSHFP tal:attributes="algorithm algorithm; fptype fptype; fingerprint fingerprint"/>
@@ -532,6 +552,7 @@ class XmlFormatter(Formatter):
                         icontext.addGlobal ("protocol", rdata.protocol)
                         icontext.addGlobal ("flags", rdata.flags)
                         icontext.addGlobal ("algorithm", rdata.algorithm)
+                        icontext.addGlobal ("length", keylength(rdata.algorithm, rdata.key))
                         icontext.addGlobal ("key", "TODO") # rdata.key is binary, encode it first with to_hexstring()
                         self.dnskey_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
@@ -696,7 +717,7 @@ dlv_html_template = """
 <span>Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
 """
 dnskey_html_template = """
-<span><span tal:condition="keytag">Key <span tal:replace="keytag"/>, </span>algorithm <span tal:replace="algorithm"/>, flags <span tal:replace="flags"/></span>
+<span><span tal:condition="keytag">Key <span tal:replace="keytag"/>, </span>algorithm <span tal:replace="algorithm"/>, length <span tal:replace="length"/> bits, flags <span tal:replace="flags"/></span>
 """
 sshfp_html_template = """
 <span>Algorithm <span tal:replace="algorithm"/>, Fingerprint type <span tal:replace="fptype"/>, fingerprint <span tal:replace="fingerprint"/></span>
@@ -926,6 +947,7 @@ class HtmlFormatter(Formatter):
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         icontext.addGlobal ("algorithm", rdata.algorithm)
+                        icontext.addGlobal ("length", keylength(rdata.algorithm, rdata.key))
                         icontext.addGlobal ("protocol", rdata.protocol)
                         icontext.addGlobal ("flags", rdata.flags)
                         try:

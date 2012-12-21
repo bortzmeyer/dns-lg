@@ -210,3 +210,4 @@ delay
 echo "Test methods other than GET (should be refused)"
 ${WEB} --head ${URL}/example.org/A
 ${WEB} --data STUFF ${URL}/example.org/A
+
