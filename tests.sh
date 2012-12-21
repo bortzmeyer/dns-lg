@@ -205,6 +205,7 @@ delay
 # Various HTTP tricks
 
 # This one requires curl, to have custom headers
-echo Test methods other than GET (should be refused)
-curl --head ${URL}/example.org/A
-curl --data STUFF ${URL}/example.org/A
+echo "Test methods other than GET (should be refused)"
+${WEB} --head ${URL}/example.org/A
+${WEB} --data STUFF ${URL}/example.org/A
+
