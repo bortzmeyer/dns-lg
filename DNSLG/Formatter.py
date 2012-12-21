@@ -691,7 +691,7 @@ mx_html_template = """
 """
 # TODO: better presentation of "admin" (replacement of . by @ and mailto: URL)
 # TODO: better presentation of intervals? (Weeks, days, etc)
-# TODO: indicate the type of the record before the answer? Not obvious.
+# TODO: indicate the type of the record before the answer? Not obvious. At least add an explanatory text instead of just the data (TODO CRIT)
 soa_html_template = """
 <span>Zone administrator <span tal:replace="admin"/>, master server <a class="hostname" tal:attributes="href path" tal:content="master"/>, serial number <span tal:replace="serial"/>, refresh interval <span tal:replace="refresh"/> s, retry interval <span tal:replace="retry"/> s, expiration delay <span tal:replace="expire"/> s, negative reply TTL <span tal:replace="minimum"/> s</span>
 """
@@ -705,7 +705,7 @@ srv_html_template = """
 <span>Priority <span tal:content="priority"/>, weight <span tal:content="weight"/>, host <a class="hostname" tal:attributes="href path" tal:content="hostname"/>, port <span tal:content="port"/>,</span>
 """
 txt_html_template = """
-<span tal:content="text"/>
+Text <span tal:content="text"/>
 """
 spf_html_template = """
 <span tal:content="text"/>
@@ -978,6 +978,7 @@ class HtmlFormatter(Formatter):
                         self.naptr_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
+                    # TODO CRIT: handle RRSIG (46) and NSEC (47) and NSEC3
                     else:
                         icontext.addGlobal ("rrtype", rdata.rdtype)
                         self.unknown_template.expand (icontext, iresult,
