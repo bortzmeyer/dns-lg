@@ -27,12 +27,12 @@ def keylength(alg, key):
         firstbyte = struct.unpack("B", key[0])[0]
         if firstbyte > 0:
             exponentlength =  firstbyte + 1
-            return (len(key)-exponentlength)*8
         else:
             exponentlength = struct.unpack(">H", key[1:3])[0] + 3
-            return (len(key)-exponentlength)*8
+        return (len(key)-exponentlength)*8
     else:
-        # Unknown, best guess
+        # Unknown, best guess. Read the RFCs 6605 or 5933 to find out
+        # the format of ECDSA or GOST keys.
         return len(key)*8
     
 class Formatter():
