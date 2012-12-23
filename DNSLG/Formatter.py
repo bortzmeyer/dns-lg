@@ -8,8 +8,7 @@ import pkg_resources
 import time
 import struct
 
-# TODO: Accept explicit requests for CNAME and DNAME?
-# TODO CRIT: handle CNAME better
+# TODO: Accept explicit requests for DNAME?
 # TODO: DANE/TLSA record type. Not yet in DNS Python so not easy...
 
 import Answer
@@ -117,6 +116,8 @@ class TextFormatter(Formatter):
                                        (rdata.target, rdata.port, rdata.priority, rdata.weight)
                     elif rdata.rdtype == dns.rdatatype.PTR:
                         self.output += "Target: %s\n" % rdata.target
+                    elif rdata.rdtype == dns.rdatatype.CNAME:
+                        self.output += "Canonical name: %s\n" % rdata.target
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         self.output += "DNSSEC key: "
                         try:
@@ -202,6 +203,8 @@ class ZoneFormatter(Formatter):
                         self.output += "NS\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.PTR:
                         self.output += "PTR\t%s\n" % rdata.to_text()
+                    elif rdata.rdtype == dns.rdatatype.CNAME:
+                        self.output += "CNAME\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.LOC:
                         self.output += "LOC\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
@@ -277,6 +280,9 @@ class JsonFormatter(Formatter):
                                                              'Altitude': '%f' % rdata.altitude})
                     elif rdata.rdtype == dns.rdatatype.PTR:
                         self.object['AnswerSection'].append({'Type': 'PTR',
+                                                             'Target': str(rdata.target)})
+                    elif rdata.rdtype == dns.rdatatype.CNAME:
+                        self.object['AnswerSection'].append({'Type': 'CNAME',
                                                              'Target': str(rdata.target)})
                     elif rdata.rdtype == dns.rdatatype.MX:
                         self.object['AnswerSection'].append({'Type': 'MX', 
@@ -412,6 +418,9 @@ loc_xml_template = """
 ptr_xml_template = """
 <PTR tal:attributes="ptrdname name"/>
 """
+cname_xml_template = """
+<CNAME tal:attributes="host target"/>
+"""
 # TODO: NSEC3PARAM not in draft-daley-dns-schema-00
 nsec3param_xml_template = """
 <NSEC3PARAM tal:attributes="algorithm algorithm; flags flags; iterations iterations"/>
@@ -455,6 +464,7 @@ class XmlFormatter(Formatter):
         self.loc_template = simpleTAL.compileXMLTemplate (loc_xml_template)
         self.ns_template = simpleTAL.compileXMLTemplate (ns_xml_template)
         self.ptr_template = simpleTAL.compileXMLTemplate (ptr_xml_template)
+        self.cname_template = simpleTAL.compileXMLTemplate (cname_xml_template)
         self.soa_template = simpleTAL.compileXMLTemplate (soa_xml_template)
         self.ds_template = simpleTAL.compileXMLTemplate (ds_xml_template)
         self.nsec3param_template = simpleTAL.compileXMLTemplate (nsec3param_xml_template)
@@ -608,6 +618,11 @@ class XmlFormatter(Formatter):
                         self.ptr_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.CNAME:
+                        icontext.addGlobal ("target", rdata.target)
+                        self.cname_template.expand (icontext, iresult,
+                                                           suppressXMLDeclaration=True, 
+                                                      outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.LOC:
                         icontext.addGlobal ("longitude", rdata.float_longitude)
                         icontext.addGlobal ("latitude", rdata.float_latitude)
@@ -714,6 +729,9 @@ ns_html_template = """
 """
 ptr_html_template = """
 <span><a class="hostname" tal:attributes="href path" tal:content="hostname"/></span>
+"""
+cname_html_template = """
+<span><a class="hostname" tal:attributes="href path" tal:content="target"/></span>
 """
 srv_html_template = """
 <span>Priority <span tal:content="priority"/>, weight <span tal:content="weight"/>, host <a class="hostname" tal:attributes="href path" tal:content="hostname"/>, port <span tal:content="port"/>,</span>
@@ -824,6 +842,7 @@ class HtmlFormatter(Formatter):
         self.soa_template = simpleTAL.compileXMLTemplate (soa_html_template)
         self.ns_template = simpleTAL.compileXMLTemplate (ns_html_template)
         self.ptr_template = simpleTAL.compileXMLTemplate (ptr_html_template)
+        self.cname_template = simpleTAL.compileXMLTemplate (cname_html_template)
         self.srv_template = simpleTAL.compileXMLTemplate (srv_html_template)
         self.txt_template = simpleTAL.compileXMLTemplate (txt_html_template)
         self.spf_template = simpleTAL.compileXMLTemplate (spf_html_template)
@@ -918,6 +937,12 @@ class HtmlFormatter(Formatter):
                         icontext.addGlobal ("hostname", rdata.target)
                         icontext.addGlobal ("path", self.link_of(rdata.target, querier))
                         self.ptr_template.expand (icontext, iresult,
+                                                       suppressXMLDeclaration=True,
+                                                      outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.CNAME:
+                        icontext.addGlobal ("target", rdata.target)
+                        icontext.addGlobal ("path", self.link_of(rdata.target, querier))
+                        self.cname_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.SRV:

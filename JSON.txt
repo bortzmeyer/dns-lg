@@ -53,6 +53,9 @@ NS:
 PTR:
   * Target
 
+CNAME:
+  * Target
+
 SOA:
   * MaintainerName
   * MasterServerName
