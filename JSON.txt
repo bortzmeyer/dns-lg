@@ -76,6 +76,12 @@ DLV:
   * DelegationKey
   * DigestType
 
+NSEC3PARAM:
+  * Algorihm
+  * Flags
+  * Salt
+  * Iterations
+
 SSHFP:
   * Algorithm
   * DigestType

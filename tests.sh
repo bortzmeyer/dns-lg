@@ -92,6 +92,14 @@ for type in DS; do
 	delay
     done
 done
+for type in NSEC3PARAM; do
+    for domain in fr gov com; do
+	for format in text zone xml html json; do
+	    ${WEB} ${URL}/${domain}/${type}?format=${format}
+	done
+	delay
+    done
+done
 for type in NAPTR; do
     for domain in http.uri.arpa education.lu mailclub.tel; do
 	for format in text zone xml html json; do

@@ -126,11 +126,9 @@ class TextFormatter(Formatter):
                             # key_id appeared only in dnspython 1.9. Not
                             # always available on 2012-05-17
                             pass
-                        self.output += "algorithm %i, flags %i\n" % (rdata.algorithm, rdata.flags)
+                        self.output += "algorithm %i, length %i bits, flags %i\n" % (rdata.algorithm, keylength(rdata.algorithm, rdata.key), rdata.flags)
                     elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
                         self.output += "NSEC3PARAM: algorithm %i, iterations %i\n" % (rdata.algorithm, rdata.iterations) # TODO format salt (tagged as string but actually binaty)
-                        self.output += "algorithm %i, length %i bits, flags %i\n" % \
-                                       (rdata.algorithm, keylength(rdata.algorithm, rdata.key), rdata.flags)
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         self.output += "SSH fingerprint: algorithm %i, digest type %i, fingerprint %s\n" % \
                                        (rdata.algorithm, rdata.fp_type, to_hexstring(rdata.fingerprint))
@@ -215,6 +213,8 @@ class ZoneFormatter(Formatter):
                             # key_id appeared only in dnspython 1.9. Not
                             # always available on 2012-05-17
                             self.output += "\n"
+                    elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
+                        self.output += "NSEC3PARAM\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.DS:
                         self.output += "DS\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.DLV:
@@ -310,6 +310,8 @@ class JsonFormatter(Formatter):
                             # always available on 2012-05-17
                             pass
                         self.object['AnswerSection'].append(returned_object)
+                    elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:   
+                        self.object['AnswerSection'].append({'Type': 'NSEC3PARAM', 'Algorithm': rdata.algorithm, 'Iterations': rdata.iterations, 'Flags': rdata.flags}) # TODO format salt (tagged as string but actually binaty)
                     elif rdata.rdtype == dns.rdatatype.DS:
                         self.object['AnswerSection'].append({'Type': 'DS', 'DelegationKey': rdata.key_tag,
                                                              'DigestType': rdata.digest_type})
@@ -410,6 +412,10 @@ loc_xml_template = """
 ptr_xml_template = """
 <PTR tal:attributes="ptrdname name"/>
 """
+# TODO: NSEC3PARAM not in draft-daley-dns-schema-00
+nsec3param_xml_template = """
+<NSEC3PARAM tal:attributes="algorithm algorithm; flags flags; iterations iterations"/>
+"""
 ds_xml_template = """
 <DS tal:attributes="keytag keytag; algorithm algorithm; digesttype digesttype; digest digest"/>
 """
@@ -451,6 +457,7 @@ class XmlFormatter(Formatter):
         self.ptr_template = simpleTAL.compileXMLTemplate (ptr_xml_template)
         self.soa_template = simpleTAL.compileXMLTemplate (soa_xml_template)
         self.ds_template = simpleTAL.compileXMLTemplate (ds_xml_template)
+        self.nsec3param_template = simpleTAL.compileXMLTemplate (nsec3param_xml_template)
         self.dlv_template = simpleTAL.compileXMLTemplate (dlv_xml_template)
         self.dnskey_template = simpleTAL.compileXMLTemplate (dnskey_xml_template)
         self.sshfp_template = simpleTAL.compileXMLTemplate (sshfp_xml_template)
@@ -523,6 +530,13 @@ class XmlFormatter(Formatter):
                         icontext.addGlobal ("preference", rdata.preference)
                         icontext.addGlobal ("exchange", rdata.exchange)
                         self.mx_template.expand (icontext, iresult,
+                                                           suppressXMLDeclaration=True, 
+                                                      outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
+                        icontext.addGlobal ("algorithm", rdata.algorithm)
+                        icontext.addGlobal ("flags", rdata.flags)
+                        icontext.addGlobal ("iterations", rdata.iterations)
+                        self.nsec3param_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.DS:
@@ -710,6 +724,9 @@ txt_html_template = """
 spf_html_template = """
 <span tal:content="text"/>
 """
+nsec3param_html_template = """
+<span>NSEC3 parameters, hash type <span tal:replace="algorithm"/>, <span tal:replace="iterations"/> iterations, flags <span tal:replace="flags"/></span>
+"""
 ds_html_template = """
 <span>Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
 """
@@ -811,6 +828,7 @@ class HtmlFormatter(Formatter):
         self.txt_template = simpleTAL.compileXMLTemplate (txt_html_template)
         self.spf_template = simpleTAL.compileXMLTemplate (spf_html_template)
         self.loc_template = simpleTAL.compileXMLTemplate (loc_html_template)
+        self.nsec3param_template = simpleTAL.compileXMLTemplate (nsec3param_html_template)
         self.ds_template = simpleTAL.compileXMLTemplate (ds_html_template)
         self.dlv_template = simpleTAL.compileXMLTemplate (dlv_html_template)
         self.dnskey_template = simpleTAL.compileXMLTemplate (dnskey_html_template)
@@ -927,6 +945,13 @@ class HtmlFormatter(Formatter):
                         icontext.addGlobal ("latitude", rdata.float_latitude)
                         icontext.addGlobal ("altitude", rdata.altitude)
                         self.loc_template.expand (icontext, iresult,
+                                                       suppressXMLDeclaration=True,
+                                                      outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
+                        icontext.addGlobal ("algorithm", rdata.algorithm)
+                        icontext.addGlobal ("iterations", rdata.iterations)
+                        icontext.addGlobal ("flags", rdata.flags)
+                        self.nsec3param_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.DS:
