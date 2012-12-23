@@ -705,7 +705,7 @@ srv_html_template = """
 <span>Priority <span tal:content="priority"/>, weight <span tal:content="weight"/>, host <a class="hostname" tal:attributes="href path" tal:content="hostname"/>, port <span tal:content="port"/>,</span>
 """
 txt_html_template = """
-Text <span tal:content="text"/>
+<span>Text <span tal:content="text"/></span>
 """
 spf_html_template = """
 <span tal:content="text"/>
