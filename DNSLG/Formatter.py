@@ -696,7 +696,7 @@ html_template = """<?xml version="1.0" encoding="utf-8"?>
     <div class="body">
     <p tal:condition="distinctowner">Response is name <span class="hostname" tal:content="ownername"/>.</p><p tal:condition="flags">Response flags are: <span tal:replace="flags"/>.</p>
     <div class="rrsets" tal:repeat="rrset rrsets">
-     <p><span tal:condition="rrset/ttl">Time-to-Live of this answer is <span tal:replace="rrset/ttl"/>.</span></p>
+     <p><span tal:condition="rrset/ttl">Time-to-Live of this answer is <span tal:replace="rrset/ttl"/>: </span></p>
     <ul tal:condition="rrset/records">
       <li tal:repeat="record rrset/records" tal:content="structure record"/>
     </ul>
@@ -720,7 +720,10 @@ mx_html_template = """
 """
 # TODO: better presentation of "admin" (replacement of . by @ and mailto: URL)
 # TODO: better presentation of intervals? (Weeks, days, etc)
-# TODO: indicate the type of the record before the answer? Not obvious. At least add an explanatory text instead of just the data (TODO CRIT)
+# TODO: indicate the type of the record before the answer? Not obvious
+# since it is useless when there is only one type requested. At least
+# test if the QTYPE was ANY and add an explanatory text instead of
+# just the data.
 soa_html_template = """
 <span>Zone administrator <span tal:replace="admin"/>, master server <a class="hostname" tal:attributes="href path" tal:content="master"/>, serial number <span tal:replace="serial"/>, refresh interval <span tal:replace="refresh"/> s, retry interval <span tal:replace="retry"/> s, expiration delay <span tal:replace="expire"/> s, negative reply TTL <span tal:replace="minimum"/> s</span>
 """
@@ -753,6 +756,10 @@ dlv_html_template = """
 """
 dnskey_html_template = """
 <span><span tal:condition="keytag">Key <span tal:replace="keytag"/>, </span>algorithm <span tal:replace="algorithm"/>, length <span tal:replace="length"/> bits, flags <span tal:replace="flags"/></span>
+"""
+# TODO display the key tag, the inception and expiration time?
+rrsig_html_template = """
+<span>DNSSEC signature</span>
 """
 sshfp_html_template = """
 <span>Algorithm <span tal:replace="algorithm"/>, Fingerprint type <span tal:replace="fptype"/>, fingerprint <span tal:replace="fingerprint"/></span>
@@ -851,6 +858,7 @@ class HtmlFormatter(Formatter):
         self.ds_template = simpleTAL.compileXMLTemplate (ds_html_template)
         self.dlv_template = simpleTAL.compileXMLTemplate (dlv_html_template)
         self.dnskey_template = simpleTAL.compileXMLTemplate (dnskey_html_template)
+        self.rrsig_template = simpleTAL.compileXMLTemplate (rrsig_html_template)
         self.sshfp_template = simpleTAL.compileXMLTemplate (sshfp_html_template)
         self.naptr_template = simpleTAL.compileXMLTemplate (naptr_html_template)
         self.unknown_template = simpleTAL.compileXMLTemplate (unknown_html_template)
@@ -1010,6 +1018,12 @@ class HtmlFormatter(Formatter):
                         self.dnskey_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.RRSIG:
+                        self.rrsig_template.expand (icontext, iresult,
+                                                       suppressXMLDeclaration=True,
+                                                      outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.NSEC or rdata.rdtype == dns.rdatatype.NSEC3:
+                        pass # Can it happen? We do not display anything if NXDOMAIN or ANSWER=0
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         icontext.addGlobal ("algorithm", rdata.algorithm)
                         icontext.addGlobal ("fptype", rdata.fp_type)
@@ -1028,7 +1042,6 @@ class HtmlFormatter(Formatter):
                         self.naptr_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
-                    # TODO CRIT: handle RRSIG (46) and NSEC (47) and NSEC3
                     else:
                         icontext.addGlobal ("rrtype", rdata.rdtype)
                         self.unknown_template.expand (icontext, iresult,

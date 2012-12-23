@@ -72,7 +72,7 @@ class Resolver():
                                      want_dnssec=self.do)
                 except dns.rdatatype.UnknownRdatatype:
                     raise UnknownRRtype()
-                message.payload = DEFAULT_EDNS_SIZE
+                message.payload = self.payload
             except dns.rdatatype.UnknownRdatatype:
                 raise UnknownRRtype()
             if cd:

@@ -216,8 +216,13 @@ Disallow: /
             elif format == "XML":
                 formatter = Formatter.XmlFormatter(domain)
             self.resolver.reset()
-            if do_dnssec:
-                self.resolver.set_edns(dnssec=True)
+            if edns_size is None:
+                self.resolver.set_edns(version=-1)
+            else:
+                if do_dnssec:
+                    self.resolver.set_edns(payload=edns_size, dnssec=True)
+                else:
+                    self.resolver.set_edns(payload=edns_size)
             if alt_resolver:
                 self.resolver.set_nameservers([alt_resolver,])
             query_start = datetime.now()
