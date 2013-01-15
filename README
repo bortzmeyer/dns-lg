@@ -156,9 +156,6 @@ sample-config-file.ini as an example.
 There are many other possibilities, either with Apache or with another
 HTTP server with WSGI support. Browse the Web!
 
-TODO: document the special files such as robots.txt (see the comments
-at the end of DNSLG/__init__.py)
-
 The official source is at Github
 <https://github.com/bortzmeyer/dns-lg>. The best place to report bugs,
 submit patches and give opinions is through the Github issue tracker.

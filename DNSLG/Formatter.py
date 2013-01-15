@@ -9,7 +9,8 @@ import time
 import struct
 
 # TODO: Accept explicit requests for DNAME?
-# TODO: DANE/TLSA record type. Not yet in DNS Python so not easy...
+# TODO: DANE/TLSA record type. Not yet in DNS Python release
+# (committed in the upstream git repository) so not easy...
 
 import Answer
 
@@ -96,9 +97,8 @@ class TextFormatter(Formatter):
                     elif rdata.rdtype == dns.rdatatype.NS:
                         self.output += "Name server: %s\n" % rdata.target
                     elif rdata.rdtype == dns.rdatatype.DS:
-                        self.output += "Delegation of signature: key %i, hash type %i\n" % \
-                                       (rdata.key_tag, rdata.digest_type)
-                        # TODO: display the digest with to_hexstring
+                        self.output += "Delegation of signature: key %i, hash type %i, hash %s\n" % \
+                                       (rdata.key_tag, rdata.digest_type, to_hexstring(rdata.digest))
                     elif rdata.rdtype == dns.rdatatype.DLV:
                         self.output += "Delegation of signature: key %i, hash type %i\n" % \
                                        (rdata.key_tag, rdata.digest_type)
@@ -129,7 +129,7 @@ class TextFormatter(Formatter):
                             pass
                         self.output += "algorithm %i, length %i bits, flags %i\n" % (rdata.algorithm, keylength(rdata.algorithm, rdata.key), rdata.flags)
                     elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
-                        self.output += "NSEC3PARAM: algorithm %i, iterations %i\n" % (rdata.algorithm, rdata.iterations) # TODO format salt (tagged as string but actually binaty)
+                        self.output += "NSEC3PARAM: algorithm %i, iterations %i, salt %s\n" % (rdata.algorithm, rdata.iterations, to_hexstring(rdata.salt)) 
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         self.output += "SSH fingerprint: algorithm %i, digest type %i, fingerprint %s\n" % \
                                        (rdata.algorithm, rdata.fp_type, to_hexstring(rdata.fingerprint))
@@ -317,7 +317,7 @@ class JsonFormatter(Formatter):
                             pass
                         self.object['AnswerSection'].append(returned_object)
                     elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:   
-                        self.object['AnswerSection'].append({'Type': 'NSEC3PARAM', 'Algorithm': rdata.algorithm, 'Iterations': rdata.iterations, 'Flags': rdata.flags}) # TODO format salt (tagged as string but actually binaty)
+                        self.object['AnswerSection'].append({'Type': 'NSEC3PARAM', 'Algorithm': rdata.algorithm, 'Iterations': rdata.iterations, 'Salt': to_hexstring(rdata.salt), 'Flags': rdata.flags}) 
                     elif rdata.rdtype == dns.rdatatype.DS:
                         self.object['AnswerSection'].append({'Type': 'DS', 'DelegationKey': rdata.key_tag,
                                                              'DigestType': rdata.digest_type})
@@ -345,7 +345,7 @@ class JsonFormatter(Formatter):
                                                              'Priority': rdata.priority,
                                                              'Weight': rdata.weight})
                     else:
-                        self.object['AnswerSection'].append({'Type': "unknown"}) # TODO: the type number
+                        self.object['AnswerSection'].append({'Type': "unknown %i" % rdata.rdtype}) 
                     if rdata.rdtype != dns.rdatatype.RRSIG:
                         self.object['AnswerSection'][-1]['TTL'] = rrset.ttl
                         self.object['AnswerSection'][-1]['Name'] = str(rrset.name)
@@ -359,7 +359,7 @@ class JsonFormatter(Formatter):
                                 'Duration': duration}
         if querier.description:
             self.object['Query']['Description'] = querier.description
-        self.object['Query']['Versions'] = "DNS Looking Glass %s, DNSpython version %s, Python version %s %s on %s\n" % \
+        self.object['Query']['Versions'] = "DNS Looking Glass %s, DNSpython version %s, Python version %s %s on %s" % \
                        (self.myversion, dnspythonversion.version,
                         platform.python_implementation(),
                         platform.python_version(), platform.system())
@@ -553,7 +553,7 @@ class XmlFormatter(Formatter):
                         icontext.addGlobal ("keytag", rdata.key_tag)
                         icontext.addGlobal ("digesttype", rdata.digest_type)
                         icontext.addGlobal ("algorithm", rdata.algorithm)
-                        icontext.addGlobal ("digest", "TODO") # rdata.digest is binary, encode it first with to_hexstring()
+                        icontext.addGlobal ("digest", to_hexstring(rdata.digest))
                         self.ds_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
@@ -561,7 +561,7 @@ class XmlFormatter(Formatter):
                         icontext.addGlobal ("keytag", rdata.key_tag)
                         icontext.addGlobal ("digesttype", rdata.digest_type)
                         icontext.addGlobal ("algorithm", rdata.algorithm)
-                        icontext.addGlobal ("digest", "TODO") # rdata.digest is binary, encode it first with to_hexstring()
+                        icontext.addGlobal ("digest", to_hexstring(rdata.digest)) 
                         self.dlv_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
@@ -577,7 +577,7 @@ class XmlFormatter(Formatter):
                         icontext.addGlobal ("flags", rdata.flags)
                         icontext.addGlobal ("algorithm", rdata.algorithm)
                         icontext.addGlobal ("length", keylength(rdata.algorithm, rdata.key))
-                        icontext.addGlobal ("key", "TODO") # rdata.key is binary, encode it first with to_hexstring()
+                        icontext.addGlobal ("key", to_hexstring(rdata.key))
                         self.dnskey_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
@@ -713,63 +713,59 @@ version_html_template = """
 <span>DNS Looking Glass "<span tal:replace="myversion"/>", <a href="http://www.dnspython.org/">DNSpython</a> version <span tal:replace="dnsversion"/>, <a href="http://www.python.org/">Python</a> version <span tal:replace="pyversion"/></span>
 """
 address_html_template = """
-<a class="address" tal:attributes="href path" tal:content="address"/>
+<span>IP address: <a class="address" tal:attributes="href path" tal:content="address"/></span>
 """
 mx_html_template = """
-<span><a class="hostname" tal:attributes="href path" tal:content="hostname"/> (preference <span tal:replace="pref"/>)</span>
+<span>Mail Exchanger: <a class="hostname" tal:attributes="href path" tal:content="hostname"/> (preference <span tal:replace="pref"/>)</span>
 """
 # TODO: better presentation of "admin" (replacement of . by @ and mailto: URL)
 # TODO: better presentation of intervals? (Weeks, days, etc)
-# TODO: indicate the type of the record before the answer? Not obvious
-# since it is useless when there is only one type requested. At least
-# test if the QTYPE was ANY and add an explanatory text instead of
-# just the data.
 soa_html_template = """
-<span>Zone administrator <span tal:replace="admin"/>, master server <a class="hostname" tal:attributes="href path" tal:content="master"/>, serial number <span tal:replace="serial"/>, refresh interval <span tal:replace="refresh"/> s, retry interval <span tal:replace="retry"/> s, expiration delay <span tal:replace="expire"/> s, negative reply TTL <span tal:replace="minimum"/> s</span>
+<span>Start Of Authority: Zone administrator <span tal:replace="admin"/>, master server <a class="hostname" tal:attributes="href path" tal:content="master"/>, serial number <span tal:replace="serial"/>, refresh interval <span tal:replace="refresh"/> s, retry interval <span tal:replace="retry"/> s, expiration delay <span tal:replace="expire"/> s, negative reply TTL <span tal:replace="minimum"/> s</span>
 """
 ns_html_template = """
-<span><a class="hostname" tal:attributes="href path" tal:content="hostname"/></span>
+<span>Name Servers: <a class="hostname" tal:attributes="href path" tal:content="hostname"/></span>
 """
 ptr_html_template = """
-<span><a class="hostname" tal:attributes="href path" tal:content="hostname"/></span>
+<span>Associated name: <a class="hostname" tal:attributes="href path" tal:content="hostname"/></span>
 """
 cname_html_template = """
-<span><a class="hostname" tal:attributes="href path" tal:content="target"/></span>
+<span>Canonical name: <a class="hostname" tal:attributes="href path" tal:content="target"/></span>
 """
 srv_html_template = """
-<span>Priority <span tal:content="priority"/>, weight <span tal:content="weight"/>, host <a class="hostname" tal:attributes="href path" tal:content="hostname"/>, port <span tal:content="port"/>,</span>
+<span>Service: Priority <span tal:content="priority"/>, weight <span tal:content="weight"/>, host <a class="hostname" tal:attributes="href path" tal:content="hostname"/>, port <span tal:content="port"/>,</span>
 """
 txt_html_template = """
-<span>Text <span tal:content="text"/></span>
+<span>Text: <span tal:content="text"/></span>
 """
 spf_html_template = """
 <span tal:content="text"/>
 """
 nsec3param_html_template = """
-<span>NSEC3 parameters, hash type <span tal:replace="algorithm"/>, <span tal:replace="iterations"/> iterations, flags <span tal:replace="flags"/></span>
+<span>NSEC3 parameters: hash type <span tal:replace="algorithm"/>, <span tal:replace="iterations"/> iterations, flags <span tal:replace="flags"/></span>
 """
 ds_html_template = """
-<span>Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
+<span>Secure Delegation: Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
 """
 dlv_html_template = """
-<span>Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
+<span>Lookaside Secure Delegation: Key <span tal:replace="keytag"/> (hash type <span tal:replace="digesttype"/>)</span>
 """
 dnskey_html_template = """
-<span><span tal:condition="keytag">Key <span tal:replace="keytag"/>, </span>algorithm <span tal:replace="algorithm"/>, length <span tal:replace="length"/> bits, flags <span tal:replace="flags"/></span>
+<span>DNSSEC key: <span tal:condition="keytag"><span tal:replace="keytag"/>, </span>algorithm <span tal:replace="algorithm"/>, length <span tal:replace="length"/> bits, flags <span tal:replace="flags"/></span>
 """
 # TODO display the key tag, the inception and expiration time?
 rrsig_html_template = """
 <span>DNSSEC signature</span>
 """
 sshfp_html_template = """
-<span>Algorithm <span tal:replace="algorithm"/>, Fingerprint type <span tal:replace="fptype"/>, fingerprint <span tal:replace="fingerprint"/></span>
+<span>SSH fingerprint: Algorithm <span tal:replace="algorithm"/>, Fingerprint type <span tal:replace="fptype"/>, fingerprint <span tal:replace="fingerprint"/></span>
 """
 naptr_html_template = """
-<span>Flags "<span tal:replace="flags"/>", Service(s) "<span tal:replace="services"/>", order <span tal:replace="order"/> and preference <span tal:replace="preference"/>, regular expression <span class="naptr_regexp" tal:content="regexp"/>, replacement <span class="domainname" tal:content="replacement"/></span>
+<span>Naming Authority Pointer: Flags "<span tal:replace="flags"/>", Service(s) "<span tal:replace="services"/>", order <span tal:replace="order"/> and preference <span tal:replace="preference"/>, regular expression <span class="naptr_regexp" tal:content="regexp"/>, replacement <span class="domainname" tal:content="replacement"/></span>
 """
 # TODO: link to Open Street Map
 loc_html_template = """
-<span><span tal:replace="longitude"/> / <span tal:replace="latitude"/> (altitude <span tal:replace="altitude"/>)</span>
+<span>Location: <span tal:replace="longitude"/> / <span tal:replace="latitude"/> (altitude <span tal:replace="altitude"/>)</span>
 """
 unknown_html_template = """
 <span>Unknown record type (<span tal:replace="rrtype"/>)</span>
