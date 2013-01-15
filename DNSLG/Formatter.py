@@ -739,7 +739,7 @@ txt_html_template = """
 <span>Text: <span tal:content="text"/></span>
 """
 spf_html_template = """
-<span tal:content="text"/>
+<span>SPF record: <span tal:content="text"/></span>
 """
 nsec3param_html_template = """
 <span>NSEC3 parameters: hash type <span tal:replace="algorithm"/>, <span tal:replace="iterations"/> iterations, flags <span tal:replace="flags"/></span>
@@ -756,6 +756,9 @@ dnskey_html_template = """
 # TODO display the key tag, the inception and expiration time?
 rrsig_html_template = """
 <span>DNSSEC signature</span>
+"""
+nsec_html_template = """
+<span>NSEC or NSEC3 record</span>
 """
 sshfp_html_template = """
 <span>SSH fingerprint: Algorithm <span tal:replace="algorithm"/>, Fingerprint type <span tal:replace="fptype"/>, fingerprint <span tal:replace="fingerprint"/></span>
@@ -855,6 +858,7 @@ class HtmlFormatter(Formatter):
         self.dlv_template = simpleTAL.compileXMLTemplate (dlv_html_template)
         self.dnskey_template = simpleTAL.compileXMLTemplate (dnskey_html_template)
         self.rrsig_template = simpleTAL.compileXMLTemplate (rrsig_html_template)
+        self.nsec_template = simpleTAL.compileXMLTemplate (nsec_html_template)
         self.sshfp_template = simpleTAL.compileXMLTemplate (sshfp_html_template)
         self.naptr_template = simpleTAL.compileXMLTemplate (naptr_html_template)
         self.unknown_template = simpleTAL.compileXMLTemplate (unknown_html_template)
@@ -1019,7 +1023,10 @@ class HtmlFormatter(Formatter):
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.NSEC or rdata.rdtype == dns.rdatatype.NSEC3:
-                        pass # Can it happen? We do not display anything if NXDOMAIN or ANSWER=0
+                        # It can happen with QTYPE=ANY
+                        self.nsec_template.expand (icontext, iresult,
+                                                       suppressXMLDeclaration=True,
+                                                      outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.SSHFP:
                         icontext.addGlobal ("algorithm", rdata.algorithm)
                         icontext.addGlobal ("fptype", rdata.fp_type)
