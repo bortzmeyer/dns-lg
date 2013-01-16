@@ -19,8 +19,6 @@ DELAY=${DNSLG_DELAY:-0}
 
 # TODO: test with another base
 
-# TODO: test JSON output thoroughly with http://jsonlint.com/
-
 delay() {
     if [ $DELAY != 0 ]; then
 	sleep $DELAY

@@ -261,7 +261,7 @@ Disallow: /
         except Resolver.NoSuchDomainName:
             output = "Domain %s does not exist\n" % domain
             output = output.encode(self.encoding)
-            # TODO send back HTML if this is the expected format
+            # TODO send back in the requested format (see issue #11)
             send_response(start_response, '404 No such domain', output, plaintype)
         except Resolver.Refused:
             output = "Refusal to answer for all name servers for %s\n" % domain
@@ -274,21 +274,19 @@ Disallow: /
         except Resolver.Timeout: 
             output = "No server replies for domain %s\n" % domain
             output = output.encode(self.encoding)
-            # TODO send back HTML if this is the expected format. In
-            # that case, do not serialize output.
+            # TODO issue #11. In that case, do not serialize output.
             send_response(start_response, '504 Timeout', output,
                           "text/plain")
         except Resolver.NoPositiveAnswer: 
             output = "No server replies for domain %s\n" % domain
             output = output.encode(self.encoding)
-            # TODO send back HTML if this is the expected format. In
-            # that case, do not serialize output.
+            # TODO issue #11
             send_response(start_response, '504 No positive answer', output,
                           "text/plain")
         except Resolver.UnknownError as code:
             output = "Unknown error %s resolving %s\n" % (dns.rcode.to_text(int(str(code))), domain)
             output = output.encode(self.encoding)
-            # TODO send back HTML if this is the expected format
+            # TODO issue #11
             send_response(start_response, '500 Unknown server error', output, plaintype)
         return [output]
     
@@ -362,7 +360,7 @@ Disallow: /
                 # directive, 'Alias /robots.txt
                 # /usr/local/www/documents/robots.txt" etc.
             pure_path = path[len(self.base_url):]
-            # TODO: content negotiation? Find the output format from Accept headers?
+            # TODO: content negotiation, see issue #10
             return self.query(start_response, pure_path, client, format, resolver,
                               do_dnssec, tcp, cd, edns_size, reverse)
         else:

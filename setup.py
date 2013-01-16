@@ -6,7 +6,7 @@ use_setuptools()
 from setuptools import setup
 
 setup(name='DNS-LG',
-      version='2012122301', 
+      version='2013011601', 
       description='DNS Looking Glass',
       license='BSD',
       author='Stephane Bortzmeyer',
