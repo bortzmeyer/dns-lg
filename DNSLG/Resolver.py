@@ -35,9 +35,12 @@ class UnknownError(Exception):
 
 class Resolver():
     
-    def __init__(self, nameservers=None, maximum=3, timeout=0.5,
+    def __init__(self, nameservers=None, maximum=3, timeout=1.0,
                  edns_version=0, edns_payload=DEFAULT_EDNS_SIZE, do_dnssec=False):
         # TODO: ednsflags such as NSID
+        # TODO: the default timeout is too high for authoritative name
+        # servers and too low for some far-away recursive: separate
+        # the two cases?
         """ A "None" value for the parameter nameservers means to use
         the system's default resolver(s). Otherwise, this parameter
         is an *array* of the IP addresses of the resolvers.

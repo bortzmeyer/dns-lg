@@ -136,7 +136,8 @@ delay
 
 echo We should be able to query the root. 
 # TODO: But . is special in a URL and Apache modifies it (it works
-# with the test server). Hence the pseudo-TLD root.
+# with the test server). Hence the pseudo-TLD root. The rest is not
+# guaranteed to work.
 for format in text zone xml html json; do
     ${WEB} ${URL}/root/SOA?format=${format}
     ${WEB} ${URL}/./SOA?format=${format}
