@@ -32,6 +32,8 @@ default_bucket_size = 5
 
 # Misc. util. routines
 def send_response(start_response, status, output, type):
+    # TODO: an input parameter indicating the expiration time, and
+    # produces an Expires: HTTP header. See issue #13
     response_headers = [('Content-type', type),
                         ('Content-Length', str(len(output))),
                         ('Allow', 'GET')]
