@@ -604,7 +604,11 @@ class XmlFormatter(Formatter):
                                                     suppressXMLDeclaration=True, 
                                                     outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.TXT:
-                        icontext.addGlobal ("text", " ".join(rdata.strings))
+                        # Yes, some people add Unicode in TXT records,
+                        # see mailclub.tel for instance. We assume
+                        # UTF-8
+                        text = unicode(" ".join(rdata.strings), "UTF-8")
+                        icontext.addGlobal ("text", text)
                         self.txt_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
@@ -963,7 +967,8 @@ class HtmlFormatter(Formatter):
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.TXT:
-                        icontext.addGlobal ("text", "\n".join(rdata.strings))
+                        text = unicode(" ".join(rdata.strings), "UTF-8")
+                        icontext.addGlobal ("text", text)
                         self.txt_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
