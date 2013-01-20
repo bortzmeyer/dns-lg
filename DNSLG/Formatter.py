@@ -696,9 +696,9 @@ html_template = """<?xml version="1.0" encoding="utf-8"?>
     <div class="body">
     <p tal:condition="distinctowner">Response is name <span class="hostname" tal:content="ownername"/>.</p><p tal:condition="flags">Response flags are: <span tal:replace="flags"/>.</p>
     <div class="rrsets" tal:repeat="rrset rrsets">
-     <p><span tal:condition="rrset/ttl">Time-to-Live of this answer is <span tal:replace="rrset/ttl"/>: </span></p>
     <ul tal:condition="rrset/records">
       <li tal:repeat="record rrset/records" tal:content="structure record"/>
+      <li tal:condition="rrset/ttl">(Time-to-Live of this answer is <span tal:replace="rrset/ttl"/>)</li>
     </ul>
     </div>
     <p tal:condition="not: rrsets">No data was found.</p>
@@ -718,7 +718,7 @@ address_html_template = """
 mx_html_template = """
 <span>Mail Exchanger: <a class="hostname" tal:attributes="href path" tal:content="hostname"/> (preference <span tal:replace="pref"/>)</span>
 """
-# TODO: better presentation of "admin" (replacement of . by @ and mailto: URL)
+# TODO: better presentation of "admin" (replacement of . by @ and mailto: URL). See nic.in for an example of a broken zone, in that respect.
 # TODO: better presentation of intervals? (Weeks, days, etc)
 soa_html_template = """
 <span>Start Of Authority: Zone administrator <span tal:replace="admin"/>, master server <a class="hostname" tal:attributes="href path" tal:content="master"/>, serial number <span tal:replace="serial"/>, refresh interval <span tal:replace="refresh"/> s, retry interval <span tal:replace="retry"/> s, expiration delay <span tal:replace="expire"/> s, negative reply TTL <span tal:replace="minimum"/> s</span>

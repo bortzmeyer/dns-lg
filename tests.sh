@@ -82,6 +82,14 @@ for type in LOC; do
 	done
     done
 done
+delay
+for type in TXT; do
+    for domain in several-records.generic-nic.net several-strings.generic-nic.net ; do
+	for format in text zone xml html json; do
+	    ${WEB} ${URL}/${domain}/${type}?format=${format}
+	done
+    done
+done
 for type in DS; do
     for domain in bortzmeyer.fr isc.org; do
 	for format in text zone xml html json; do
