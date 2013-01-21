@@ -1,0 +1,7 @@
+; this file contains a TXT RRset for inclusion into a 
+; zone master file.
+;
+; last modified: 2013-01-21
+;
+dns-lg  IN   TXT     "http://dns.bortzmeyer.org/"
+        IN   TXT     "http://dns-lg.nlnetlabs.nl/"
