@@ -145,7 +145,7 @@ class TextFormatter(Formatter):
                        rdata.rdtype != dns.rdatatype.NSEC and \
                        rdata.rdtype != dns.rdatatype.NSEC3:
                     self.output += "TTL: %i\n" % rrset.ttl
-        self.output += "Resolver queried: %s\n" % querier.resolver.nameservers[0]
+        self.output += "Resolver queried: %s\n" % answer.nameserver
         self.output += "Query done at: %s\n" % time.strftime("%Y-%m-%d %H:%M:%SZ",
                                                              time.gmtime(time.time()))
         self.output += "Query duration: %s\n" % querier.delay
@@ -235,7 +235,7 @@ class ZoneFormatter(Formatter):
                         self.output += "TYPE%i ; DATA %s\n" % (rdata.rdtype, rdata.to_text())
                 if rdata.rdtype != dns.rdatatype.RRSIG:
                     self.output += "; TTL: %i\n\n" % rrset.ttl # TODO: put it in the zone, not as a comment
-        self.output += "\n; Server: %s\n" % querier.resolver.nameservers[0]
+        self.output += "\n; Server: %s\n" % answer.nameserver
         self.output += "; When: %s\n" % time.strftime("%Y-%m-%d %H:%M:%SZ",
                                                              time.gmtime(time.time()))
         self.output += "; Query duration: %s\n" % querier.delay
@@ -355,7 +355,7 @@ class JsonFormatter(Formatter):
             delay = querier.delay
             duration = (delay.days*86400) + delay.seconds + \
                        (float(delay.microseconds)/1000000.0)
-        self.object['Query'] = {'Server': querier.resolver.nameservers[0],
+        self.object['Query'] = {'Server': answer.nameserver,
                                 'Duration': duration}
         if querier.description:
             self.object['Query']['Description'] = querier.description
@@ -478,7 +478,7 @@ class XmlFormatter(Formatter):
         self.rcontext = simpleTALES.Context(allowPythonPath=False)
         self.context.addGlobal ("qname", self.domain)
         self.context.addGlobal ("qtype", qtype)
-        self.context.addGlobal ("resolver", querier.resolver.nameservers[0])
+        self.context.addGlobal ("resolver", answer.nameserver)
         try:
             duration = querier.delay.total_seconds()
         except AttributeError: # total_seconds appeared only with Python 2.7
@@ -869,7 +869,7 @@ class HtmlFormatter(Formatter):
         self.context = simpleTALES.Context(allowPythonPath=False)
         self.context.addGlobal ("title", "Query for domain %s, type %s" % \
                                     (self.domain, qtype))
-        self.context.addGlobal ("resolver", querier.resolver.nameservers[0])
+        self.context.addGlobal ("resolver", answer.nameserver)
         self.context.addGlobal ("email", querier.email_admin)
         self.context.addGlobal ("doc", querier.url_doc)
         self.context.addGlobal("contenttype", 
