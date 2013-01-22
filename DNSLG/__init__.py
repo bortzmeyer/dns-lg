@@ -128,7 +128,7 @@ Disallow: /
             mtype = 'application/json'
         elif format == "ZONE":
             mtype = 'text/dns' # RFC 4027
-            # TODO: application/dns, "detached" DNS (binary) as in RFC 2540?
+        # TODO: application/dns, "detached" DNS (binary), see issue #20
         elif format == "XML":
             mtype = 'application/xml'
         else:
