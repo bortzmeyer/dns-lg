@@ -119,7 +119,6 @@ Disallow: /
               reverse=False):
         """ path must starts with a /, then the domain name then an
         (optional) / followed by the QTYPE """
-        # TODO: document and implement the query class
         if not path.startswith('/'):
             raise Exception("Internal error: no / at the beginning of %s" % path)
         plaintype = 'text/plain; charset=%s' % self.encoding
@@ -189,21 +188,27 @@ Disallow: /
                 qtype = 'PTR'
             else:
                 domain = args
-                qtype = 'A'
+                qtype = 'ADDR'
         else:
             if reverse:
                 domain = str(dns.reversename.from_address(args[:slashpos]))
             else:
                 domain = args[:slashpos]
-            requested_qtype = args[slashpos+1:].upper()
+            nextslashpos = args.find('/', slashpos+1)
+            if nextslashpos == -1:
+                requested_qtype = args[slashpos+1:].upper()
+                qclass = 'IN'
+            else:
+                requested_qtype = args[slashpos+1:nextslashpos].upper()
+                qclass = args[nextslashpos+1:].upper()
             # We do not test if the QTYPE exists. If it doesn't
             # dnspython will raise an exception. The formatter will
             # have to deal with the various records.
             if requested_qtype == "":
                 if reverse:
-                    type = 'PTR'
+                    qtype = 'PTR'
                 else:
-                    qtype = 'A'
+                    qtype = 'ADDR'
             else:
                 qtype = requested_qtype
             if reverse and qtype != 'PTR':
@@ -251,7 +256,7 @@ Disallow: /
                 self.resolver.set_nameservers([alt_resolver,])
             query_start = datetime.now()
             if qtype != "ADDR":
-                answer = self.resolver.query(qdomain, qtype, tcp=tcp, cd=cd)
+                answer = self.resolver.query(qdomain, qtype, qclass, tcp=tcp, cd=cd)
             else:
                 try:
                     answer = self.resolver.query(qdomain, "A", tcp=tcp, cd=cd)
@@ -281,6 +286,11 @@ Disallow: /
             output = "Record type %s does not exist\n" % qtype
             output = output.encode(self.encoding)
             send_response(start_response, '400 Unknown record type', output, 
+                          plaintype)
+        except Resolver.UnknownClass:
+            output = "Class %s does not exist\n" % qclass
+            output = output.encode(self.encoding)
+            send_response(start_response, '400 Unknown class', output, 
                           plaintype)
         except Resolver.NoSuchDomainName:
             output = "Domain %s does not exist\n" % domain

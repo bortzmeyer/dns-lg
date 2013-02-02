@@ -27,6 +27,9 @@ class Servfail(Exception):
 class UnknownRRtype(Exception):
     pass
 
+class UnknownClass(Exception):
+    pass
+
 class UnknownError(Exception):
     def __init__(self, value):
         self.value = value
@@ -60,24 +63,29 @@ class Resolver():
         self.nameservers = self.original_nameservers
         self.do = self.original_do
         
-    def query(self, name, type, tcp=False, cd=False):
+    def query(self, name, type, klass='IN', tcp=False, cd=False):
         """ The returned value is a DNSLG.Answer """
         if len(self.nameservers) == 0:
             raise NoNameservers()
         for ns in self.nameservers:
             try:
-                message = dns.message.make_query(name, type,
+                message = dns.message.make_query(name, type, rdclass=klass,
                                                  use_edns=self.edns, payload=self.payload,
                                                  want_dnssec=self.do)
             except TypeError: # Old DNS Python... Code here just as long as it lingers in some places
                 try:
-                    message = dns.message.make_query(name, type, use_edns=self.edns, 
+                    message = dns.message.make_query(name, type, rdclass=klass,
+                                                     use_edns=self.edns, 
                                      want_dnssec=self.do)
                 except dns.rdatatype.UnknownRdatatype:
                     raise UnknownRRtype()
+                except dns.rdataclass.UnknownRdataclass:
+                    raise UnknownClass()
                 message.payload = self.payload
             except dns.rdatatype.UnknownRdatatype:
                 raise UnknownRRtype()
+            except dns.rdataclass.UnknownRdataclass:
+                raise UnknownClass()
             if cd:
                 message.flags |= dns.flags.CD
             done = False

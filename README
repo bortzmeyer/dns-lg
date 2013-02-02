@@ -44,12 +44,12 @@ The major usage of this program is through REST requests
 do not know REST, do not worry; basically, it means we use ordinary
 HTTP requests). If the program is installed at
 <http://dns.example.net/>, the URL for the requests will be
-<http://dns.example.net/$DOMAIN[/$TYPE]> where DOMAIN is the domain
-name and TYPE a DNS record type (such as AAAA or MX).
+<http://dns.example.net/$DOMAIN[/$TYPE][/$CLASS]> where DOMAIN is the
+domain name and TYPE a DNS record type (such as AAAA or MX).
 
 More formally, following the language of URI Templates (RFC 6570), the
 URLs of this service are
-<http://dns.example.net/{+domain}/{querytype}{?format,server,buffersize,dodnssec,tcp,reverse}>
+<http://dns.example.net/{+domain}/{querytype}/{queryclass}{?format,server,buffersize,dodnssec,tcp,reverse}>
 
 There is a non-standard pseudo-querytype ADDR to request both A and
 AAAA, specially for the links in the HTML output.
