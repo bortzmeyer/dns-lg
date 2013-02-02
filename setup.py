@@ -6,7 +6,7 @@ use_setuptools()
 from setuptools import setup
 
 setup(name='DNS-LG',
-      version='2013012101', 
+      version='2013020201', 
       description='DNS Looking Glass',
       license='BSD',
       author='Stephane Bortzmeyer',
@@ -15,7 +15,7 @@ setup(name='DNS-LG',
       download_url='https://github.com/bortzmeyer/dns-lg/tarball/master',
       packages=['DNSLG',],
       provides=['DNSLG',],
-      install_requires=[] # We require netaddr, simpletal and
+      install_requires=[] # We require netaddr, simpletal, webob and
                           # dnspython but Python cannot find them,
                           # even when installed :-( Packaging in
                           # Python is completely broken, anyway

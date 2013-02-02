@@ -14,6 +14,10 @@ import dns.reversename
 # http://code.google.com/p/netaddr/ https://github.com/drkjam/netaddr
 import netaddr
 
+# http://webob.org/
+# Debian package python-webob
+from webob import Request
+
 # Internal modules
 import Formatter
 from LeakyBucket import LeakyBucket
@@ -110,7 +114,7 @@ Disallow: /
         send_response(start_response, '404 Not Found' , output, 'text/plain')
         return [output]
 
-    def query(self, start_response, path, client, format="HTML", alt_resolver=None,
+    def query(self, start_response, req, path, client, format="", alt_resolver=None,
               do_dnssec=False, tcp=False, cd=False, edns_size=default_edns_size,
               reverse=False):
         """ path must starts with a /, then the domain name then an
@@ -119,22 +123,40 @@ Disallow: /
         if not path.startswith('/'):
             raise Exception("Internal error: no / at the beginning of %s" % path)
         plaintype = 'text/plain; charset=%s' % self.encoding
-        if format == "TEXT" or format == "TXT":
-            format = "TEXT"
-            mtype = 'text/plain; charset=%s' % self.encoding
-        elif format == "HTML":
-            mtype = 'text/html; charset=%s' % self.encoding
-        elif format == "JSON":
-            mtype = 'application/json'
-        elif format == "ZONE":
-            mtype = 'text/dns' # RFC 4027
-        # TODO: application/dns, "detached" DNS (binary), see issue #20
-        elif format == "XML":
-            mtype = 'application/xml'
+        if not format:
+            mformat = req.accept.best_match(['text/html', 'application/xml',
+                                            'application/json', 'text/dns',
+                                            'text/plain'])
+            if mformat == "text/html":
+                format = "HTML"
+            elif mformat == "application/xml":
+                format = "XML"
+            elif mformat == "application/json":
+                format = "JSON"
+            elif mformat == "text/dns":
+                format = "ZONE"
+            elif mformat == "text/plain":
+                format = "TEXT"    
+            if not mformat:
+                mformat = "text/html"
+            mtype = '%s; charset=%s' % (mformat, self.encoding)
         else:
-            output = "Unsupported format \"%s\"\n" % format
-            send_response(start_response, '400 Bad request', output, plaintype)
-            return [output]
+            if format == "TEXT" or format == "TXT":
+                format = "TEXT"
+                mtype = 'text/plain; charset=%s' % self.encoding
+            elif format == "HTML":
+                mtype = 'text/html; charset=%s' % self.encoding
+            elif format == "JSON":
+                mtype = 'application/json'
+            elif format == "ZONE":
+                mtype = 'text/dns' # RFC 4027
+            # TODO: application/dns, "detached" DNS (binary), see issue #20
+            elif format == "XML":
+                mtype = 'application/xml'
+            else:
+                output = "Unsupported format \"%s\"\n" % format
+                send_response(start_response, '400 Bad request', output, plaintype)
+                return [output]
         ip_client = netaddr.IPAddress(client)
         if ip_client.version == 4:
             ip_prefix = netaddr.IPNetwork(client + "/28")
@@ -310,8 +332,6 @@ Disallow: /
             resolver = None
             resolver = queries.get("server", [''])[0]
             format = queries.get("format", [''])[0].upper()
-            if format == "":
-                format = "HTML"
             dodnssec = queries.get("dodnssec", '')
             do_dnssec = not(len(dodnssec) == 0 or dodnssec[0] == "0" or \
                             dodnssec[0].lower() == "false" or dodnssec[0] == "")
@@ -362,8 +382,7 @@ Disallow: /
                 # directive, 'Alias /robots.txt
                 # /usr/local/www/documents/robots.txt" etc.
             pure_path = path[len(self.base_url):]
-            # TODO: content negotiation, see issue #10
-            return self.query(start_response, pure_path, client, format, resolver,
+            return self.query(start_response, Request(environ), pure_path, client, format, resolver,
                               do_dnssec, tcp, cd, edns_size, reverse)
         else:
             return self.default(start_response, path)

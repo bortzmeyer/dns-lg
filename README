@@ -54,11 +54,19 @@ URLs of this service are
 There is a non-standard pseudo-querytype ADDR to request both A and
 AAAA, specially for the links in the HTML output.
 
-The default output format is HTML so you can use this program from an
-ordinary Web browser. You can add the option format=FORMAT where
-FORMAT is XML, HTML, TEXT, ZONE or JSON (see next section). So, for
-instance, to get the IPv6 address of www.example.com in XML, it will
-be <http://dns.example.net/www.example.com/AAAA?format=XML>
+The default output format is determined by HTTP content negotiation,
+so it depends on your client. You can use this program from an
+ordinary Web browser, which will typically get HTML by default. With a
+command-line client like curl, you can add the relevant header to get
+the format you want;
+
+curl -v -H 'Accept: application/json' $URLBASE/org/SOA
+
+If content negotiation does not suit you, You can add in the URL the
+option format=FORMAT where FORMAT is XML, HTML, TEXT, ZONE or JSON
+(see next section). So, for instance, to get the IPv6 address of
+www.example.com in XML, it will be
+<http://dns.example.net/www.example.com/AAAA?format=XML>
 
 You can add an option to select the name server to query (the default
 one is choosen by the server, typically the default resolver(s) of the
@@ -113,8 +121,8 @@ separators.
 Requirments
 ***********
 
-Requires Python, then SimpleTAL, dnspython and netaddr
-Debian/Ubuntu: packages "python-netaddr python-dnspython python-simpletal"
+Requires Python, then SimpleTAL, dnspython, webob and netaddr
+Debian/Ubuntu: packages "python-netaddr python-dnspython python-webob python-simpletal"
 
 Installation
 ************
