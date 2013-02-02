@@ -6,7 +6,7 @@ is the distributed database used to retrieve data (typically IP
 addresses) from domain
 names. <http://en.wikipedia.org/wiki/Domain_Name_System>
 
-A "looking glass", among Internet engineers, typically refer to a
+A "looking glass", among Internet engineers, typically refers to a
 server on one network which serves information seen from this network
 (two points of the Internet may see different things, that's why
 looking glasses are important). Their main use, today, is to see BGP
@@ -62,14 +62,14 @@ the format you want;
 
 curl -v -H 'Accept: application/json' $URLBASE/org/SOA
 
-If content negotiation does not suit you, You can add in the URL the
+If content negotiation does not suit you, you can add in the URL the
 option format=FORMAT where FORMAT is XML, HTML, TEXT, ZONE or JSON
 (see next section). So, for instance, to get the IPv6 address of
 www.example.com in XML, it will be
 <http://dns.example.net/www.example.com/AAAA?format=XML>
 
 You can add an option to select the name server to query (the default
-one is choosen by the server, typically the default resolver(s) of the
+one is chosen by the server, typically the default resolver(s) of the
 machine). server=IP-ADDRESS (names are *not* supported)
 
 To activate DNSSEC in the responses (to send the DO bit), use option
@@ -118,8 +118,8 @@ format.
 The Zone option's format follows section 5 of RFC 1035, with tabs as
 separators.
 
-Requirments
-***********
+Requirements
+************
 
 Requires Python, then SimpleTAL, dnspython, webob and netaddr
 Debian/Ubuntu: packages "python-netaddr python-dnspython python-webob python-simpletal"
@@ -130,7 +130,7 @@ Installation
 python setup.py build
 $SUDO-OR-SIMILAR python setup.py install
 
-Then , you have to configure a HTTP server to run this WSGI
+Then you have to configure a HTTP server to run this WSGI
 script. Some configuration data can be sent by environment
 variables. For instance, if you use Google Webmasters and have the
 code (the cookie) "google1234baddcaf5678", *and* you want the program
