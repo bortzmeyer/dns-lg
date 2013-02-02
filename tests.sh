@@ -176,6 +176,18 @@ done
 echo ""
 delay
 
+echo Existing classes
+${WEB} ${URL}/fr/SOA/IN
+# Will fail, since the name servers do not serve this class
+${WEB} ${URL}/fr/SOA/CH
+echo ""
+delay
+
+echo Unknown class
+${WEB} ${URL}/fr/SOA/XX
+echo ""
+delay
+
 echo IDN
 # Important to test all output formats since they have very different
 # Unicode capabilities

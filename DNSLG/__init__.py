@@ -189,6 +189,7 @@ Disallow: /
             else:
                 domain = args
                 qtype = 'ADDR'
+            qclass = 'IN'
         else:
             if reverse:
                 domain = str(dns.reversename.from_address(args[:slashpos]))
@@ -273,13 +274,13 @@ Disallow: /
                 if answer is None:
                     query_end = datetime.now()
                     self.delay = query_end - query_start
-                    formatter.format(None, qtype, 0, self)
+                    formatter.format(None, qtype, qclass, 0, self)
                     output = formatter.result(self)
                     send_response(start_response, '200 OK', output, mtype)
                     return [output]
             query_end = datetime.now()
             self.delay = query_end - query_start
-            formatter.format(answer, qtype, answer.flags, self)
+            formatter.format(answer, qtype, qclass, answer.flags, self)
             output = formatter.result(self)
             send_response(start_response, '200 OK', output, mtype)
         except Resolver.UnknownRRtype:

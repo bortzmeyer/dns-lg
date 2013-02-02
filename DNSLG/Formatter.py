@@ -47,9 +47,9 @@ class Formatter():
             self.myversion = "VERSION UNKNOWN"
         self.domain = domain
     
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         """ Parameter "answer" must be of type
-        Answer.ExtendedAnswer. "qtype" is a string, flags an integer
+        Answer.ExtendedAnswer. "qtype" and "qclass" are strings, flags an integer
         and querier a DNSLG.Querier. This method changes the internal
         state of the Formatter, it returns nothing."""
         pass
@@ -61,14 +61,18 @@ class Formatter():
 # TEXT
 class TextFormatter(Formatter):
 
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         # TODO: it would be nice one day to have a short format to
         # have only data, not headers. Or may be several short
         # formats, suitable for typical Unix text parsing tools. In
         # the mean time, use "zone" for that.
         self.output = ""
-        self.output += "Query for: %s, type %s\n" % (self.domain.encode(querier.encoding),
-                                                   qtype)
+        if qclass != 'IN':
+            qclass_text = ", class %s" % qclass
+        else:
+            qclass_text = ""
+        self.output += "Query for: %s, type %s%s\n" % (self.domain.encode(querier.encoding),
+                                                   qtype, qclass_text)
         str_flags = ""
         if flags & dns.flags.AD:
             str_flags += "/ Authentic Data "
@@ -163,10 +167,14 @@ class TextFormatter(Formatter):
 # ZONE FILE
 class ZoneFormatter(Formatter):
 
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         self.output = ""
-        self.output += "; Question: %s, type %s\n" % (self.domain.encode(querier.encoding),
-                                                      qtype)
+        if qclass != 'IN':
+            qclass_text = ", class %s" % qclass
+        else:
+            qclass_text = ""
+        self.output += "; Question: %s, type %s%s\n" % (self.domain.encode(querier.encoding),
+                                                      qtype, qclass_text)
         str_flags = ""
         if flags & dns.flags.AD:
             str_flags += " ad "
@@ -255,10 +263,10 @@ import json
 # http://docs.python.org/library/json.html
 class JsonFormatter(Formatter):
 
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         self.object = {}
         self.object['ReturnCode'] = "NOERROR"
-        self.object['QuestionSection'] = {'Qname': self.domain, 'Qtype': qtype}
+        self.object['QuestionSection'] = {'Qname': self.domain, 'Qtype': qtype, 'Qclass': qclass}
         if flags & dns.flags.AD:
             self.object['AD'] = True
         if flags & dns.flags.AA:
@@ -452,7 +460,7 @@ unknown_xml_template = """
 # That's strange in a non-binary format like XML.
 class XmlFormatter(Formatter):
 
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         self.xml_template = simpleTAL.compileXMLTemplate (xml_template)
         self.set_template = simpleTAL.compileXMLTemplate (set_xml_template)
         self.a_template = simpleTAL.compileXMLTemplate (a_xml_template)
@@ -844,7 +852,7 @@ class HtmlFormatter(Formatter):
         result += "%i second%s" % (seconds, plural)
         return result
     
-    def format(self, answer, qtype, flags, querier):
+    def format(self, answer, qtype, qclass, flags, querier):
         self.template = simpleTAL.compileXMLTemplate (html_template)
         self.address_template = simpleTAL.compileXMLTemplate (address_html_template)
         self.version_template = simpleTAL.compileXMLTemplate (version_html_template)
