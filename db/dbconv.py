@@ -74,7 +74,7 @@ def dns_txt(db, origin="dns-lg"):
     print ";"
 
     for ep in db:
-        if 'endpoint' in ep:
+        if 'endpoint' in ep and 'status' in ep and ep.get('status') != 'down':
             txt = "\"%s\"" % (ep['endpoint'])
             print "%-10s IN TXT  %-45s ; %s" % (origin, txt, ep.get('contact', ''))
             origin = ''   # on continuation line
@@ -109,6 +109,9 @@ def xml_out(db):
 
             if 'contact' in ep:
                 child.set('contact', ep.get('contact'))
+
+            if 'status' in ep:
+                child.set('status', ep.get('status'))
 
     print prettyprint(root)
 
