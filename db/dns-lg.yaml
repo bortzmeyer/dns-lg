@@ -1,0 +1,16 @@
+# Documentation of the existing DNS-LG instances. 
+
+- endpoint: http://dns.bortzmeyer.org/
+  contact: Stéphane Bortzmeyer
+
+- endpoint: http://dnslg.generic-nic.net/
+
+- endpoint: http://dns-lg.nlnetlabs.nl/
+  contact: NLnetLabs
+
+- endpoint: http://dns-lg.tetaneutral.net/
+
+- endpoint: http://dns-lg.vs.uni-due.de/
+
+- endpoint: http://dns-lg.dk-hostmaster.dk/
+  contact: Erwin Lansing <erwin@dk-hostmaster.dk>

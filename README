@@ -121,8 +121,10 @@ separators.
 Requirements
 ************
 
-Requires Python, then SimpleTAL, dnspython, webob and netaddr
-Debian/Ubuntu: packages "python-netaddr python-dnspython python-webob python-simpletal"
+Requires Python, then SimpleTAL, dnspython, webob and netaddr. If you
+want to use the database of existing looking glasses, you will also
+need the yaml module.
+Debian/Ubuntu: packages "python-netaddr python-dnspython python-webob python-simpletal python-yaml"
 
 Installation
 ************
