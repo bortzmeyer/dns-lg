@@ -187,6 +187,14 @@ http://www.zonecut.net/dns/index.cgi No API, Web only
 
 http://www.whatsmydns.net/ REST URLs but no API
 
+See also a more up-to-date list at the end of
+<http://www.bortzmeyer.org/dns-lg.html>
+
+Other code for DNS looking glasses
+**********************************
+
+* <http://dns-lg.sidnlabs.nl/index.html> written in Go
+
 Author
 ******
 
