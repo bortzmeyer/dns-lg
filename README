@@ -118,6 +118,13 @@ format.
 The Zone option's format follows section 5 of RFC 1035, with tabs as
 separators.
 
+Using it from a program
+***********************
+
+Of course, an important reason to have a structured output format is
+to use it from a program. See the directory usages/ for sample
+programs which query the DNS looking glass.
+
 Requirements
 ************
 
