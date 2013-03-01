@@ -137,7 +137,9 @@ Disallow: /
             elif mformat == "text/plain":
                 format = "TEXT"    
             if not mformat:
-                mformat = "text/html"
+                output = "No suitable output format found\n" 
+                send_response(start_response, '400 Bad request', output, plaintype)
+                return [output]
             mtype = '%s; charset=%s' % (mformat, self.encoding)
         else:
             if format == "TEXT" or format == "TXT":

@@ -234,6 +234,13 @@ delay
 # Various HTTP tricks
 
 # This one requires curl, to have custom headers
+# See issue #28
+for format in application/json application/xml text/plain application/x-unknown; do
+    ${WEB} --header "Accept:  $format"  ${URL}/mime.org/SOA
+done
+delay
+
+# This one requires curl, to have custom headers
 echo "Test methods other than GET (should be refused)"
 ${WEB} --head ${URL}/example.org/A
 ${WEB} --data STUFF ${URL}/example.org/A
