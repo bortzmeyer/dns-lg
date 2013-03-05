@@ -364,6 +364,8 @@ class JsonFormatter(Formatter):
             duration = (delay.days*86400) + delay.seconds + \
                        (float(delay.microseconds)/1000000.0)
         self.object['Query'] = {'Server': answer.nameserver,
+                                'Time': time.strftime("%Y-%m-%d %H:%M:%SZ",
+                                                      time.gmtime(time.time())),
                                 'Duration': duration}
         if querier.description:
             self.object['Query']['Description'] = querier.description
@@ -384,7 +386,7 @@ xml_template = """
 <result>
  <query>
     <question><qname tal:content="qname"/><qtype tal:content="qtype"/></question>
-    <server><resolver tal:content="resolver"/><duration tal:content="duration"/><description tal:condition="description" tal:content="description"/><versions tal:condition="version" tal:content="version"/></server>
+    <server><resolver tal:content="resolver"/><duration tal:content="duration"/><time tal:content="time"/><description tal:condition="description" tal:content="description"/><versions tal:condition="version" tal:content="version"/></server>
  </query>
  <response>
     <!-- TODO: query ID -->
@@ -494,6 +496,8 @@ class XmlFormatter(Formatter):
             duration = (delay.days*86400) + delay.seconds + \
                        (float(delay.microseconds)/1000000.0)
         self.context.addGlobal ("duration", duration)
+        self.context.addGlobal ("time", time.strftime("%Y-%m-%d %H:%M:%SZ",
+                                                      time.gmtime(time.time())))
         self.context.addGlobal ("description", querier.description)
         self.context.addGlobal ("version",
                                 "DNS Looking Glass %s, DNSpython version %s, Python version %s %s on %s\n" % \
