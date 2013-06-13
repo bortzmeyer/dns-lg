@@ -24,3 +24,7 @@
 - endpoint: http://dns-lg.dk-hostmaster.dk/
   contact: Erwin Lansing <erwin@dk-hostmaster.dk>
   status: besteffort
+
+- endpoint: http://dnslg.verisignlabs.com/
+  contact: Duane Wessels <dwessels@verisign.com>
+  status: production
