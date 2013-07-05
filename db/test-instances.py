@@ -75,7 +75,9 @@ if __name__ == '__main__':
             except urllib2.URLError, e:
                 print "Can't connect to %s: %s" % (endpoint, str(e))
                 continue
-
+            except socket.timeout:
+                print "Can't connect to %s: timeout" % (endpoint)
+                continue
             print endpoint
             try:
                 reply = json.loads(content)
