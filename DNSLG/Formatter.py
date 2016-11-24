@@ -1021,6 +1021,7 @@ class HtmlFormatter(Formatter):
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
+                        # TODO replace the algorithm number by a nice string http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml#dns-sec-alg-numbers-1
                         icontext.addGlobal ("algorithm", rdata.algorithm)
                         icontext.addGlobal ("length", keylength(rdata.algorithm, rdata.key))
                         icontext.addGlobal ("protocol", rdata.protocol)
