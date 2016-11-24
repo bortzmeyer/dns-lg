@@ -22,7 +22,7 @@ def to_hexstring(str):
 
 def keylength(alg, key):
     """ Returns the length in bits """
-    if alg == 5 or alg == 7 or alg == 8:
+    if alg == 5 or alg == 7 or alg == 8 or alg == 10:
         # RSA, RFC 3110
         firstbyte = struct.unpack("B", key[0])[0]
         if firstbyte > 0:
