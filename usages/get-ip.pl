@@ -46,6 +46,9 @@ foreach my $URL (@DNS_LG_SERVERS) {
 
     my $datos = decode_json $response->{content};
     foreach my $rr (@{$datos->{AnswerSection}}) {
+	# TODO a (spurious?) warning "Use of uninitialized value in
+	# print at get-ip.pl" if the name is an alias, and only the
+	# canonical name has an address
         print $rr->{Address}, ' ';
     }
     print "\n";
