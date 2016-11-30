@@ -5,14 +5,14 @@ censorship, etc. */
 package main
 
 import (
-	"fmt"
-	"os"
-	"time"
-	"io/ioutil"
-	"net/http"
 	"encoding/json"
+	"fmt"
 	"github.com/miekg/dns"
 	"github.com/mreiferson/go-httpclient" // To have HTTP timeouts
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
 )
 
 const (
@@ -40,9 +40,14 @@ func queryOne(comm chan instanceQuery, url string, name string) {
 	var (
 		object dnslgResponse
 	)
-	client := httpclient.New()
-	client.ConnectTimeout = 5 * time.Second
-	client.ReadWriteTimeout = 5 * time.Second
+	transport := &httpclient.Transport{
+		ConnectTimeout:        5 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
+		RequestTimeout:        10 * time.Second,
+	}
+	defer transport.Close()
+
+	client := &http.Client{Transport: transport}
 	// TODO: the format=json is redundant with the Accept header but, as of 2013-02-14, some instances still run the old code, without content negotiation
 	request, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/ADDR?format=json", url, name), nil)
 	if err != nil {
