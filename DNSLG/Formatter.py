@@ -115,6 +115,8 @@ class TextFormatter(Formatter):
                                        (rdata.longitude[0], rdata.longitude[1], rdata.longitude[2],
                                         rdata.latitude[0], rdata.latitude[1], rdata.latitude[2],
                                         rdata.altitude)
+                    elif rdata.rdtype == dns.rdatatype.URI:
+                        self.output += "URI: %s\n" % (rdata.uri)
                     elif rdata.rdtype == dns.rdatatype.SRV:
                         self.output += "Service location: server %s, port %i, priority %i, weight %i\n" % \
                                        (rdata.target, rdata.port, rdata.priority, rdata.weight)
@@ -215,6 +217,8 @@ class ZoneFormatter(Formatter):
                         self.output += "CNAME\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.LOC:
                         self.output += "LOC\t%s\n" % rdata.to_text()
+                    elif rdata.rdtype == dns.rdatatype.URI:
+                        self.output += "URI\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         self.output += "DNSKEY\t%s" % rdata.to_text()
                         try:
@@ -286,6 +290,11 @@ class JsonFormatter(Formatter):
                                                              'Longitude': '%f' % rdata.float_longitude,
                                                              'Latitude': '%f' % rdata.float_latitude,
                                                              'Altitude': '%f' % rdata.altitude})
+                    elif rdata.rdtype == dns.rdatatype.URI:
+                        self.object['AnswerSection'].append({'Type': 'URI',
+                                                             'Target': '%s' % rdata.target,
+                                                             'Priority': '%i' % rdata.priority,
+                                                             'Weight': '%i' % rdata.weight})
                     elif rdata.rdtype == dns.rdatatype.PTR:
                         self.object['AnswerSection'].append({'Type': 'PTR',
                                                              'Target': str(rdata.target)})
@@ -424,6 +433,9 @@ spf_xml_template = """
 """
 loc_xml_template = """
 <LOC tal:attributes="longitude longitude; latitude latitude; altitude altitude"/>
+"""
+uri_xml_template = """
+<URI tal:attributes="target target; priority priority; weight weight"/>
 """
 ptr_xml_template = """
 <PTR tal:attributes="ptrdname name"/>
@@ -646,6 +658,13 @@ class XmlFormatter(Formatter):
                         self.loc_template.expand (icontext, iresult,
                                                            suppressXMLDeclaration=True, 
                                                       outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.URI:
+                        icontext.addGlobal ("target", rdata.target)
+                        icontext.addGlobal ("weight", rdata.weight)
+                        icontext.addGlobal ("priority", rdata.priority)
+                        self.loc_template.expand (icontext, iresult,
+                                                           suppressXMLDeclaration=True, 
+                                                      outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.NS:
                         icontext.addGlobal ("name", rdata.target)
                         # TODO: translate Punycode domain names back to Unicode?
@@ -785,6 +804,9 @@ naptr_html_template = """
 # TODO: link to Open Street Map
 loc_html_template = """
 <span>Location: <span tal:replace="longitude"/> / <span tal:replace="latitude"/> (altitude <span tal:replace="altitude"/>)</span>
+"""
+uri_html_template = """
+<span>Priority: <span tal:replace="priority"/>, <span tal:replace="weight"/>, <a class="hostname" tal:attributes="href path" tal:content="target"/></span>
 """
 unknown_html_template = """
 <span>Unknown record type (<span tal:replace="rrtype"/>)</span>
@@ -994,6 +1016,13 @@ class HtmlFormatter(Formatter):
                         icontext.addGlobal ("longitude", rdata.float_longitude)
                         icontext.addGlobal ("latitude", rdata.float_latitude)
                         icontext.addGlobal ("altitude", rdata.altitude)
+                        self.loc_template.expand (icontext, iresult,
+                                                       suppressXMLDeclaration=True,
+                                                      outputEncoding=querier.encoding)
+                    elif rdata.rdtype == dns.rdatatype.URI:
+                        icontext.addGlobal ("target", rdata.target)
+                        icontext.addGlobal ("weight", rdata.weight)
+                        icontext.addGlobal ("priority", rdata.priority)
                         self.loc_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
