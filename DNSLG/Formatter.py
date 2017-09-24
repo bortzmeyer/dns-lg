@@ -116,7 +116,7 @@ class TextFormatter(Formatter):
                                         rdata.latitude[0], rdata.latitude[1], rdata.latitude[2],
                                         rdata.altitude)
                     elif rdata.rdtype == dns.rdatatype.URI:
-                        self.output += "URI: %s\n" % (rdata.uri)
+                        self.output += "URI: %s\n" % (rdata.target) # TODO display priority and weight?
                     elif rdata.rdtype == dns.rdatatype.SRV:
                         self.output += "Service location: server %s, port %i, priority %i, weight %i\n" % \
                                        (rdata.target, rdata.port, rdata.priority, rdata.weight)
@@ -218,7 +218,7 @@ class ZoneFormatter(Formatter):
                     elif rdata.rdtype == dns.rdatatype.LOC:
                         self.output += "LOC\t%s\n" % rdata.to_text()
                     elif rdata.rdtype == dns.rdatatype.URI:
-                        self.output += "URI\t%s\n" % rdata.to_text()
+                        self.output += "URI\t%s\n" % rdata.to_text().encode(querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.DNSKEY:
                         self.output += "DNSKEY\t%s" % rdata.to_text()
                         try:
@@ -806,7 +806,7 @@ loc_html_template = """
 <span>Location: <span tal:replace="longitude"/> / <span tal:replace="latitude"/> (altitude <span tal:replace="altitude"/>)</span>
 """
 uri_html_template = """
-<span>Priority: <span tal:replace="priority"/>, <span tal:replace="weight"/>, <a class="hostname" tal:attributes="href path" tal:content="target"/></span>
+<span>Priority: <span tal:replace="priority"/>, <span tal:replace="weight"/>, <a class="hostname" tal:attributes="href target" tal:content="target"/></span>
 """
 unknown_html_template = """
 <span>Unknown record type (<span tal:replace="rrtype"/>)</span>
@@ -891,6 +891,7 @@ class HtmlFormatter(Formatter):
         self.txt_template = simpleTAL.compileXMLTemplate (txt_html_template)
         self.spf_template = simpleTAL.compileXMLTemplate (spf_html_template)
         self.loc_template = simpleTAL.compileXMLTemplate (loc_html_template)
+        self.uri_template = simpleTAL.compileXMLTemplate (uri_html_template)
         self.nsec3param_template = simpleTAL.compileXMLTemplate (nsec3param_html_template)
         self.ds_template = simpleTAL.compileXMLTemplate (ds_html_template)
         self.dlv_template = simpleTAL.compileXMLTemplate (dlv_html_template)
@@ -1023,7 +1024,7 @@ class HtmlFormatter(Formatter):
                         icontext.addGlobal ("target", rdata.target)
                         icontext.addGlobal ("weight", rdata.weight)
                         icontext.addGlobal ("priority", rdata.priority)
-                        self.loc_template.expand (icontext, iresult,
+                        self.uri_template.expand (icontext, iresult,
                                                        suppressXMLDeclaration=True,
                                                       outputEncoding=querier.encoding)
                     elif rdata.rdtype == dns.rdatatype.NSEC3PARAM:
