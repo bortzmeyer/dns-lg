@@ -4,22 +4,22 @@ General
 This software is a "DNS looking glass". The DNS (Domain Name System)
 is the distributed database used to retrieve data (typically IP
 addresses) from domain
-names. <http://en.wikipedia.org/wiki/Domain_Name_System>
+names. <https://en.wikipedia.org/wiki/Domain_Name_System>
 
 A "looking glass", among Internet engineers, typically refers to a
 server on one network which serves information seen from this network
 (two points of the Internet may see different things, that's why
 looking glasses are important). Their main use, today, is to see BGP
-<http://en.wikipedia.org/wiki/Border_Gateway_Protocol> routes from
+<https://en.wikipedia.org/wiki/Border_Gateway_Protocol> routes from
 another point of view
-<http://en.wikipedia.org/wiki/Looking_Glass_servers>. But it is time
+<https://en.wikipedia.org/wiki/Looking_Glass_servers>. But it is time
 to extend them to the DNS.
 
 The "DNS looking glass" allows you to get DNS data from another
 server. This is useful to check site-dependent behavior. Among the
 many reasons why the DNS data can be different in various places:
 * cache poisoning, for instance by a Kaminsky attack 
-  <http://en.wikipedia.org/wiki/DNS_cache_poisoning>,
+  <https://en.wikipedia.org/wiki/DNS_cache_poisoning>,
 * DNSSEC validation enabled at some places but not others,
 * network problems making name servers unreachable from some places,
 * caching effects (data in the cache at some places but not others),
@@ -40,16 +40,16 @@ We assume that someone installed the software. If you install it
 yourself, see the next section.
 
 The major usage of this program is through REST requests
-<http://en.wikipedia.org/wiki/Representational_state_transfer> (if you
+<https://en.wikipedia.org/wiki/Representational_state_transfer> (if you
 do not know REST, do not worry; basically, it means we use ordinary
 HTTP requests). If the program is installed at
-<http://dns.example.net/>, the URL for the requests will be
-<http://dns.example.net/$DOMAIN[/$TYPE][/$CLASS]> where DOMAIN is the
+<https://dns.example.net/>, the URL for the requests will be
+<https://dns.example.net/$DOMAIN[/$TYPE][/$CLASS]> where DOMAIN is the
 domain name and TYPE a DNS record type (such as AAAA or MX).
 
 More formally, following the language of URI Templates (RFC 6570), the
 URLs of this service are
-<http://dns.example.net/{+domain}/{querytype}/{queryclass}{?format,server,buffersize,dodnssec,tcp,reverse}>
+<https://dns.example.net/{+domain}/{querytype}/{queryclass}{?format,server,buffersize,dodnssec,tcp,reverse}>
 
 There is a non-standard pseudo-querytype ADDR to request both A and
 AAAA, specially for the links in the HTML output.
@@ -66,7 +66,7 @@ If content negotiation does not suit you, you can add in the URL the
 option format=FORMAT where FORMAT is XML, HTML, TEXT, ZONE or JSON
 (see next section). So, for instance, to get the IPv6 address of
 www.example.com in XML, it will be
-<http://dns.example.net/www.example.com/AAAA?format=XML>
+<https://dns.example.net/www.example.com/AAAA?format=XML>
 
 You can add an option to select the name server to query (the default
 one is chosen by the server, typically the default resolver(s) of the
@@ -88,10 +88,10 @@ with the value you want. Setting it to 0 will disable EDNS.
 
 For finding a domain name from an IP address, you can do requests with
 the arpa domain name, for instance
-<http://dns.example.net/1.2.0.192.in-addr.arpa/PTR> but you can also
+<https://dns.example.net/1.2.0.192.in-addr.arpa/PTR> but you can also
 use the option reverse to ask for the address to be turned into an
 arpa domain name, for instance
-<http://dns.example.net/192.0.2.1?reverse=1>.
+<https://dns.example.net/192.0.2.1?reverse=1>.
 
 There is a rate-limiter so, if you receive HTTP status code 429, it
 means you have been too aggressive.
@@ -195,7 +195,7 @@ http://www.zonecut.net/dns/index.cgi No API, Web only
 http://www.whatsmydns.net/ REST URLs but no API
 
 See also a more up-to-date list at the end of
-<http://www.bortzmeyer.org/dns-lg.html>
+<https://www.bortzmeyer.org/dns-lg.html>
 
 Other code for DNS looking glasses
 **********************************
