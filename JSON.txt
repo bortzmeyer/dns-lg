@@ -1,8 +1,9 @@
 [This is the description of the JSON output format produced by the
-*current* code. A work is going on at the IETF to specify a
+*current* code. A work was going on at the IETF to specify this
 DNS-in-JSON format
-<https://tools.ietf.org/html/draft-bortzmeyer-dns-json>.  The tool and
-the IETF document may not agree at every moment.]
+<https://datatracker.ietf.org/doc/draft-bortzmeyer-dns-json/> but it
+is now dead. Another format, slightly different, has been
+standardized, in RFC 8427.]
 
 A DNS response is represented as a JSON object. The main members of
 this object (the names are self-explanatory) are:
