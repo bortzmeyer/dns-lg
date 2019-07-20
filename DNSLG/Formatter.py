@@ -719,6 +719,7 @@ html_template = """<?xml version="1.0" encoding="utf-8"?>
     <title tal:content="title"/>
     <link tal:condition="css" rel="stylesheet" type="text/css" tal:attributes="href css"/>
     <link rel="author" href="http://www.bortzmeyer.org/static/moi.html"/>
+    <link rel="service-doc" href="https://www.bortzmeyer.org/dns-lg-usage.html"/>
     <link tal:condition="opensearch" rel="search"
            type="application/opensearchdescription+xml" 
            tal:attributes="href opensearch"
