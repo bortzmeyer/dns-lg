@@ -41,7 +41,7 @@ def send_response(start_response, status, output, type):
     response_headers = [('Content-type', type),
                         ('Content-Length', str(len(output))),
                         ('Allow', 'GET'),
-                        ('Link', '<https://www.bortzmeyer.org/dns-lg-usage.html>; rel="service-doc"; type="text/html"']
+                        ('Link', '<https://www.bortzmeyer.org/dns-lg-usage.html>; rel="service-doc"; type="text/html"')]
     start_response(status, response_headers)
 
 def punycode_of(domain):
